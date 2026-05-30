@@ -2,14 +2,14 @@
 
 import { useRef, useState, useTransition, useOptimistic, useCallback, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Table, Badge, Card, Text, Group, Checkbox, ActionIcon, Tooltip } from '@mantine/core';
+import { Text, Checkbox, ActionIcon } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { ArrowUpDown, ArrowUp, ArrowDown, Plus, Trash2, Pencil } from 'lucide-react';
 import { EditableText, EditableNumber, EditableDate, EditableSelect } from './inline-cell';
 import { formatMoney, formatDate } from '@/lib/format';
 import { TASK } from '@/lib/strings';
-import { type Client, type TaskWithClient, type TaskType, type TaskStatus, TASK_TYPE_LABEL, TASK_STATUS_LABEL } from '@/lib/types';
+import { type Client, type TaskWithClient, type TaskType, type TaskStatus } from '@/lib/types';
 import { updateTaskField, quickAddTask, deleteTask } from './actions';
 import { TasksForm } from './tasks-form';
 
@@ -35,8 +35,25 @@ type OptAction =
   | { type: 'UPDATE'; id: string; updates: Partial<TaskWithClient> }
   | { type: 'DELETE'; id: string };
 
-const statusColor: Record<TaskStatus, string> = { todo: 'gray', doing: 'yellow', done: 'teal' };
-const typeColor:   Record<TaskType,   string> = { on_demand: 'teal', maintain: 'indigo' };
+const statusPx:    Record<TaskStatus, string> = { todo: '#A78BFA', doing: '#FCD34D', done: '#4ADE80' };
+const statusLabel: Record<TaskStatus, string> = { todo: 'TODO', doing: 'WIP', done: 'DONE' };
+const typePx:     Record<TaskType,   string> = { on_demand: '#4ADE80', maintain: '#A78BFA' };
+const typeBadge:  Record<TaskType,   string> = { on_demand: ' OD',    maintain: 'MNT' };
+
+function SortBtn({ k, label, sort, onSort }: { k: SortKey; label: string; sort: { key: SortKey; dir: SortDir }; onSort: (k: SortKey) => void }) {
+  return (
+    <button onClick={() => onSort(k)} style={{
+      background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit',
+      fontSize: 11, letterSpacing: '0.12em', color: sort.key === k ? '#A78BFA' : 'rgba(255,255,255,0.25)',
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+    }}>
+      {label}
+      {sort.key === k
+        ? sort.dir === 'asc' ? <ArrowUp size={9} /> : <ArrowDown size={9} />
+        : <ArrowUpDown size={9} style={{ opacity: 0.4 }} />}
+    </button>
+  );
+}
 
 export function TasksTable({
   tasks: initialTasks,
@@ -128,211 +145,143 @@ export function TasksTable({
 
   const allSelected = sorted.length > 0 && sorted.every(t => selectedIds.has(t.id));
 
-  const cols: { key: SortKey | null; label: string; align?: 'right' | 'left' }[] = [
-    { key: 'task_date', label: 'Date'   },
-    { key: 'name',      label: 'Task'   },
-    { key: 'type',      label: 'Type'   },
-    { key: null,        label: 'Client' },
-    { key: 'status',    label: 'Status' },
-    { key: 'hours',     label: 'Hours',  align: 'right' },
-    { key: 'amount',    label: 'Amount', align: 'right' },
-    { key: null,        label: ''       },
-  ];
-
   return (
-    <>
-      <Card p={0} style={{ overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <Table
-            highlightOnHover
-            withRowBorders
-            style={{ minWidth: 820 }}
-            styles={{ th: { whiteSpace: 'nowrap', fontFamily: 'monospace', fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--mantine-color-dimmed)' } }}
-          >
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th w={40}>
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={selectedIds.size > 0 && !allSelected}
-                    onChange={onToggleSelectAll}
-                    size="xs"
-                    aria-label="Select all"
-                  />
-                </Table.Th>
-                {cols.map(({ key, label, align }) => (
-                  <Table.Th key={label} style={{ textAlign: align }}>
-                    {key ? (
-                      <button
-                        onClick={() => toggleSort(key as SortKey)}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          fontFamily: 'monospace', fontSize: 11, textTransform: 'uppercase',
-                          letterSpacing: '0.05em', color: 'var(--mantine-color-dimmed)',
-                          padding: 0,
-                        }}
-                      >
-                        {label}
-                        {sort.key === key
-                          ? sort.dir === 'asc'
-                            ? <ArrowUp size={10} style={{ color: 'var(--mantine-color-indigo-6)' }} />
-                            : <ArrowDown size={10} style={{ color: 'var(--mantine-color-indigo-6)' }} />
-                          : <ArrowUpDown size={10} style={{ opacity: 0.4 }} />}
-                      </button>
-                    ) : label}
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
+    <div style={{ border: '1px solid rgba(139,92,246,0.2)', background: 'rgba(0,0,0,0.25)', overflowX: 'auto', minWidth: 700 }}>
 
-            <Table.Tbody>
-              {sorted.map(task => (
-                <Table.Tr
-                  key={task.id}
-                  style={{ background: selectedIds.has(task.id) ? 'rgba(99,102,241,0.1)' : undefined }}
-                >
-                  <Table.Td>
-                    <Checkbox
-                      checked={selectedIds.has(task.id)}
-                      onChange={() => onToggleSelect(task.id)}
-                      onClick={e => e.stopPropagation()}
-                      size="xs"
-                      aria-label="Select task"
-                    />
-                  </Table.Td>
-
-                  <Table.Td>
-                    <EditableDate
-                      value={task.task_date}
-                      formatFn={v => formatDate(v).slice(0, 5)}
-                      onSave={v => saveField(task, { task_date: v })}
-                    />
-                  </Table.Td>
-
-                  <Table.Td style={{ minWidth: 200 }}>
-                    <EditableText value={task.name} bold onSave={v => saveField(task, { name: v })} />
-                    {task.note && (
-                      <Text size="xs" c="dimmed" lineClamp={1} pl={6}>{task.note}</Text>
-                    )}
-                  </Table.Td>
-
-                  <Table.Td>
-                    <EditableSelect<TaskType>
-                      value={task.type}
-                      options={[
-                        { value: 'on_demand', label: TASK.type.on_demand },
-                        { value: 'maintain',  label: TASK.type.maintain  },
-                      ]}
-                      renderValue={v => (
-                        <Badge color={typeColor[v]} variant="light" size="sm">
-                          {TASK_TYPE_LABEL[v]}
-                        </Badge>
-                      )}
-                      onSave={v => saveField(task, { type: v, hours: v === 'maintain' ? null : (task.hours ?? 0) })}
-                    />
-                  </Table.Td>
-
-                  <Table.Td>
-                    <EditableSelect<string>
-                      value={task.client_id ?? ''}
-                      options={[
-                        { value: '', label: TASK.fields.unassigned },
-                        ...clients.map(c => ({ value: c.id, label: c.name })),
-                      ]}
-                      renderValue={v => (
-                        <Text size="sm" c={v ? undefined : 'dimmed'}>
-                          {clients.find(c => c.id === v)?.name ?? '—'}
-                        </Text>
-                      )}
-                      onSave={v => saveField(task, { client_id: v || null })}
-                    />
-                  </Table.Td>
-
-                  <Table.Td>
-                    <EditableSelect<TaskStatus>
-                      value={task.status}
-                      options={[
-                        { value: 'todo',  label: TASK.status.todo  },
-                        { value: 'doing', label: TASK.status.doing },
-                        { value: 'done',  label: TASK.status.done  },
-                      ]}
-                      renderValue={v => (
-                        <Badge color={statusColor[v]} variant="light" size="sm">
-                          {TASK_STATUS_LABEL[v]}
-                        </Badge>
-                      )}
-                      onSave={v => saveField(task, { status: v })}
-                    />
-                  </Table.Td>
-
-                  <Table.Td ta="right">
-                    {task.type === 'on_demand' ? (
-                      <EditableNumber
-                        value={task.hours}
-                        step={0.25}
-                        min={0}
-                        onSave={v => saveField(task, { hours: v })}
-                      />
-                    ) : (
-                      <Text size="sm" c="dimmed" ta="right" pr={6}>—</Text>
-                    )}
-                  </Table.Td>
-
-                  <Table.Td ta="right">
-                    {task.type === 'on_demand'
-                      ? <Text size="sm" ff="monospace" ta="right" pr={6}>{formatMoney(task.amount, currency)}</Text>
-                      : <Text size="sm" c="dimmed" ta="right" pr={6}>—</Text>
-                    }
-                  </Table.Td>
-
-                  <Table.Td>
-                    <Group gap={4} wrap="nowrap" justify="flex-end" className="row-actions">
-                      <Tooltip label="Edit" withArrow position="top">
-                        <ActionIcon
-                          variant="subtle"
-                          color="gray"
-                          size="sm"
-                          onClick={() => openEdit(task)}
-                          aria-label="Edit"
-                        >
-                          <Pencil size={13} />
-                        </ActionIcon>
-                      </Tooltip>
-                      <Tooltip label="Delete" withArrow position="top">
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          size="sm"
-                          onClick={() => onDelete(task)}
-                          aria-label="Delete"
-                        >
-                          <Trash2 size={13} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-
-              {sorted.length === 0 && (
-                <Table.Tr>
-                  <Table.Td colSpan={9} ta="center" py="xl">
-                    <Text size="sm" c="dimmed">{TASK.empty.title}</Text>
-                  </Table.Td>
-                </Table.Tr>
-              )}
-
-              <QuickAddRow
-                key={addNonce}
-                clients={clients}
-                onAdded={() => { setAddNonce(n => n + 1); router.refresh(); }}
-              />
-            </Table.Tbody>
-          </Table>
+      {/* ── Quest log header ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '6px 12px',
+        borderBottom: '1px solid rgba(139,92,246,0.15)',
+        background: 'rgba(139,92,246,0.06)',
+        fontSize: 11, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.25)',
+      }}>
+        <div style={{ width: 28, flexShrink: 0 }}>
+          <Checkbox checked={allSelected} indeterminate={selectedIds.size > 0 && !allSelected}
+            onChange={onToggleSelectAll} size="xs" aria-label="Select all" />
         </div>
-      </Card>
-    </>
+        <div style={{ width: 46, flexShrink: 0 }}><SortBtn k="task_date" label="DATE" sort={sort} onSort={toggleSort} /></div>
+        <div style={{ width: 40, flexShrink: 0 }}>CLASS</div>
+        <div style={{ flex: 1 }}><SortBtn k="name" label="QUEST_NAME" sort={sort} onSort={toggleSort} /></div>
+        <div style={{ width: 76, flexShrink: 0 }}>CLIENT</div>
+        <div style={{ width: 62, flexShrink: 0 }}><SortBtn k="status" label="STATUS" sort={sort} onSort={toggleSort} /></div>
+        <div style={{ width: 52, flexShrink: 0, textAlign: 'right' }}><SortBtn k="hours" label="HRS" sort={sort} onSort={toggleSort} /></div>
+        <div style={{ width: 92, flexShrink: 0, textAlign: 'right' }}><SortBtn k="amount" label="REWARD" sort={sort} onSort={toggleSort} /></div>
+        <div style={{ width: 44, flexShrink: 0 }} />
+      </div>
+
+      {/* ── Quest rows ── */}
+      {sorted.map(task => {
+        const sc = statusPx[task.status];
+        const selected = selectedIds.has(task.id);
+        return (
+          <div
+            key={task.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '5px 12px',
+              borderBottom: '1px solid rgba(255,255,255,0.04)',
+              borderLeft: `2px solid ${sc}`,
+              background: selected ? 'rgba(139,92,246,0.08)' : 'transparent',
+              transition: 'background 0.1s',
+            }}
+            onMouseEnter={e => { if (!selected) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)'; }}
+            onMouseLeave={e => { if (!selected) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            {/* Checkbox */}
+            <div style={{ width: 28, flexShrink: 0 }}>
+              <Checkbox checked={selected} onChange={() => onToggleSelect(task.id)}
+                onClick={e => e.stopPropagation()} size="xs" aria-label="Select task" />
+            </div>
+
+            {/* Date */}
+            <div style={{ width: 46, flexShrink: 0 }}>
+              <EditableDate value={task.task_date} formatFn={v => formatDate(v).slice(0, 5)} onSave={v => saveField(task, { task_date: v })} />
+            </div>
+
+            {/* Type badge */}
+            <div style={{ width: 40, flexShrink: 0 }}>
+              <EditableSelect<TaskType>
+                value={task.type}
+                options={[{ value: 'on_demand', label: TASK.type.on_demand }, { value: 'maintain', label: TASK.type.maintain }]}
+                renderValue={v => (
+                  <span style={{ fontSize: 11, border: `1px solid ${typePx[v]}55`, color: typePx[v], padding: '0 3px', letterSpacing: '0.03em', fontFamily: 'inherit', cursor: 'pointer' }}>
+                    {typeBadge[v]}
+                  </span>
+                )}
+                onSave={v => saveField(task, { type: v, hours: v === 'maintain' ? null : (task.hours ?? 0) })}
+              />
+            </div>
+
+            {/* Name */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <EditableText value={task.name} bold onSave={v => saveField(task, { name: v })} />
+              {task.note && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.28)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingLeft: 6 }}>{task.note}</div>}
+            </div>
+
+            {/* Client */}
+            <div style={{ width: 76, flexShrink: 0, overflow: 'hidden' }}>
+              <EditableSelect<string>
+                value={task.client_id ?? ''}
+                options={[{ value: '', label: TASK.fields.unassigned }, ...clients.map(c => ({ value: c.id, label: c.name }))]}
+                renderValue={v => <Text size="xs" c={v ? undefined : 'dimmed'} truncate>{clients.find(c => c.id === v)?.name ?? '—'}</Text>}
+                onSave={v => saveField(task, { client_id: v || null })}
+              />
+            </div>
+
+            {/* Status dots */}
+            <div style={{ width: 62, flexShrink: 0 }}>
+              <EditableSelect<TaskStatus>
+                value={task.status}
+                options={[{ value: 'todo', label: TASK.status.todo }, { value: 'doing', label: TASK.status.doing }, { value: 'done', label: TASK.status.done }]}
+                renderValue={v => (
+                  <span style={{
+                    color: statusPx[v], border: `1px solid ${statusPx[v]}`,
+                    padding: '1px 5px', fontSize: 12, letterSpacing: '0.06em',
+                    fontFamily: 'inherit', cursor: 'pointer',
+                  }}>
+                    {statusLabel[v]}
+                  </span>
+                )}
+                onSave={v => saveField(task, { status: v })}
+              />
+            </div>
+
+            {/* Hours */}
+            <div style={{ width: 52, flexShrink: 0, textAlign: 'right' }}>
+              {task.type === 'on_demand'
+                ? <EditableNumber value={task.hours} step={0.25} min={0} onSave={v => saveField(task, { hours: v })} />
+                : <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 14 }}>——</span>}
+            </div>
+
+            {/* Reward (amount) */}
+            <div style={{ width: 92, flexShrink: 0, textAlign: 'right', fontSize: 14 }}>
+              {task.type === 'on_demand'
+                ? <span style={{ color: '#4ADE80', fontFamily: 'inherit' }}>{formatMoney(task.amount, currency)}</span>
+                : <span style={{ color: 'rgba(255,255,255,0.2)' }}>——</span>}
+            </div>
+
+            {/* Actions */}
+            <div style={{ width: 44, flexShrink: 0, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+              <ActionIcon variant="subtle" color="gray" size="sm" onClick={() => openEdit(task)} aria-label="Edit">
+                <Pencil size={12} />
+              </ActionIcon>
+              <ActionIcon variant="subtle" color="red" size="sm" onClick={() => onDelete(task)} aria-label="Delete">
+                <Trash2 size={12} />
+              </ActionIcon>
+            </div>
+          </div>
+        );
+      })}
+
+      {sorted.length === 0 && (
+        <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 16, letterSpacing: '0.08em' }}>
+          {'// NO QUESTS FOUND'}
+        </div>
+      )}
+
+      <QuickAddRow key={addNonce} clients={clients} onAdded={() => { setAddNonce(n => n + 1); router.refresh(); }} />
+    </div>
   );
 }
 
@@ -364,57 +313,54 @@ function QuickAddRow({ clients, onAdded }: { clients: Client[]; onAdded: () => v
   }
 
   return (
-    <Table.Tr style={{ borderTop: '1px dashed var(--mantine-color-gray-3)' }}>
-      <Table.Td colSpan={active ? 2 : 9} style={{ paddingTop: 6, paddingBottom: 6 }}>
-        {active ? (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      padding: '5px 12px',
+      borderTop: '1px dashed rgba(139,92,246,0.2)',
+    }}>
+      <div style={{ width: 28, flexShrink: 0 }} />
+      {active ? (
+        <>
           <input
             ref={inputRef}
             value={name}
             onChange={e => setName(e.target.value)}
             onKeyDown={onKey}
             onBlur={() => { if (name.trim()) submit(); else setActive(false); }}
-            placeholder="Task name… (Enter to save, Esc to cancel)"
+            placeholder="QUEST NAME... [ENTER] SAVE  [ESC] CANCEL"
             disabled={pending}
             style={{
-              width: '100%', border: '1px solid var(--mantine-color-indigo-4)',
-              borderRadius: 0, padding: '4px 8px', fontSize: 13,
-              outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
+              flex: 1, border: '1px solid rgba(139,92,246,0.5)',
+              padding: '4px 8px', fontSize: 15,
+              outline: 'none', boxShadow: '0 0 0 2px rgba(139,92,246,0.15)',
+              background: 'rgba(139,92,246,0.06)', color: '#E8E8F0', fontFamily: 'inherit',
             }}
           />
-        ) : (
-          <button
-            onClick={activate}
+          <select
+            value={clientId}
+            onChange={e => setClientId(e.target.value)}
             style={{
-              display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
-              cursor: 'pointer', padding: '4px 8px', borderRadius: 0, fontSize: 13,
-              color: 'var(--mantine-color-dimmed)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              padding: '4px 6px', fontSize: 14, cursor: 'pointer',
+              background: 'var(--mantine-color-dark-6)', color: '#E8E8F0', fontFamily: 'inherit',
             }}
           >
-            <Plus size={14} /> New task
-          </button>
-        )}
-      </Table.Td>
-      {active && (
-        <>
-          <Table.Td>
-            <Badge color="teal" variant="light" size="sm">On-demand</Badge>
-          </Table.Td>
-          <Table.Td>
-            <select
-              value={clientId}
-              onChange={e => setClientId(e.target.value)}
-              style={{
-                border: '1px solid var(--mantine-color-gray-3)', borderRadius: 0,
-                padding: '3px 6px', fontSize: 13, cursor: 'pointer', width: '100%',
-              }}
-            >
-              <option value="">{TASK.fields.unassigned}</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </Table.Td>
-          <Table.Td colSpan={5} />
+            <option value="">{TASK.fields.unassigned}</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
         </>
+      ) : (
+        <button
+          onClick={activate}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
+            cursor: 'pointer', padding: '4px 8px', fontSize: 14, fontFamily: 'inherit',
+            color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em',
+          }}
+        >
+          <Plus size={13} /> NEW QUEST
+        </button>
       )}
-    </Table.Tr>
+    </div>
   );
 }

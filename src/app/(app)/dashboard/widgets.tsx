@@ -1,150 +1,179 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Card, Text, Group, Stack, Badge, RingProgress,
-  ThemeIcon, List, Anchor,
-} from '@mantine/core';
-import {
-  TrendingUp, TrendingDown, Minus, Timer, ArrowRight, CheckCircle2,
-} from 'lucide-react';
+import { Text, Group } from '@mantine/core';
+import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
-/* ── Completion widget ───────────────────────────────────────────────── */
-export function CompletionWidget({
-  todo, doing, done,
-}: {
-  todo: number; doing: number; done: number;
-}) {
+/* ── Pixel HP bar ──────────────────────────────────────────────────── */
+function PixelBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max === 0 ? 0 : Math.min(value / max, 1);
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{
+        flex: 1, height: 14, position: 'relative',
+        background: 'rgba(255,255,255,0.06)',
+        border: `1px solid ${color}33`,
+      }}>
+        <div style={{
+          position: 'absolute', left: 0, top: 0, bottom: 0,
+          width: `${pct * 100}%`,
+          background: color,
+          boxShadow: `0 0 8px ${color}88`,
+        }} />
+      </div>
+      <span style={{ color, fontSize: 12, minWidth: 34, textAlign: 'right', letterSpacing: '0.04em' }}>
+        {Math.round(pct * 100)}%
+      </span>
+    </div>
+  );
+}
+
+/* ── Completion (HP) widget ────────────────────────────────────────── */
+export function CompletionWidget({ todo, doing, done }: { todo: number; doing: number; done: number }) {
   const total   = todo + doing + done;
   const donePct = total === 0 ? 0 : Math.round((done / total) * 100);
 
-  const sections = [
-    { value: total === 0 ? 0 : (done  / total) * 100, color: 'teal'   },
-    { value: total === 0 ? 0 : (doing / total) * 100, color: 'yellow' },
-    { value: total === 0 ? 0 : (todo  / total) * 100, color: 'gray'   },
-  ];
-
   return (
-    <Card h="100%">
-      <Group justify="space-between" mb="xs">
-        <Text size="xs" c="dimmed" fw={500}>Completion</Text>
-        <ThemeIcon variant="light" color="teal" size="sm" radius="xl">
-          <CheckCircle2 size={13} />
-        </ThemeIcon>
-      </Group>
-
-      <Group gap="md" align="center">
-        <RingProgress
-          size={72}
-          thickness={7}
-          roundCaps
-          sections={sections}
-          label={
-            <Text ta="center" fw={700} size="sm">{donePct}%</Text>
-          }
-        />
-        <Stack gap={4}>
-          <Group gap="xs">
-            <Badge color="teal" variant="dot" size="sm">Done</Badge>
-            <Text size="xs" c="dimmed">{done}</Text>
-          </Group>
-          <Group gap="xs">
-            <Badge color="yellow" variant="dot" size="sm">In progress</Badge>
-            <Text size="xs" c="dimmed">{doing}</Text>
-          </Group>
-          <Group gap="xs">
-            <Badge color="gray" variant="dot" size="sm">To do</Badge>
-            <Text size="xs" c="dimmed">{todo}</Text>
-          </Group>
-        </Stack>
-      </Group>
-    </Card>
-  );
-}
-
-/* ── Delta widget ────────────────────────────────────────────────────── */
-export function DeltaWidget({
-  current, previous, currency,
-}: {
-  current: number; previous: number; currency: string;
-}) {
-  const delta     = current - previous;
-  const pctChange = previous === 0
-    ? (current > 0 ? 100 : 0)
-    : Math.round((delta / previous) * 100);
-  const up   = delta > 0;
-  const flat = delta === 0;
-
-  const Icon  = flat ? Minus : up ? TrendingUp : TrendingDown;
-  const color = flat ? 'gray' : up ? 'teal' : 'red';
-
-  return (
-    <Card h="100%">
-      <Group justify="space-between" mb="xs">
-        <Text size="xs" c="dimmed" fw={500}>vs last month</Text>
-        <ThemeIcon variant="light" color={color} size="sm" radius="xl">
-          <Icon size={13} />
-        </ThemeIcon>
-      </Group>
-
-      <Text fw={700} size="xl" style={{ letterSpacing: '-0.02em' }}>
-        {formatMoney(current, currency)}
+    <div style={{
+      background: 'rgba(0,0,0,0.35)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderLeft: '4px solid #22c55e',
+      padding: '16px 18px',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+    }}>
+      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: '#22c55e', marginBottom: 12 }}>
+        COMPLETION (HP)
       </Text>
 
-      <Group gap="xs" mt={4}>
-        <Badge color={color} variant="light" size="sm">
-          {up ? '+' : ''}{pctChange}%
-        </Badge>
-        <Text size="xs" c="dimmed">last: {formatMoney(previous, currency)}</Text>
-      </Group>
-    </Card>
+      <div style={{ marginBottom: 10 }}>
+        <PixelBar value={done} max={total} color="#22c55e" />
+      </div>
+
+      <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 10 }}>
+        {donePct}% Nhiệm vụ đã xong
+      </Text>
+
+      <div style={{ display: 'flex', gap: 14, fontSize: 13 }}>
+        <span style={{ color: '#22c55e' }}>●DONE&nbsp;{done}</span>
+        <span style={{ color: '#FCD34D' }}>●WIP&nbsp;&nbsp;{doing}</span>
+        <span style={{ color: 'rgba(255,255,255,0.3)' }}>○TODO&nbsp;{todo}</span>
+      </div>
+    </div>
   );
 }
 
-/* ── Unbilled widget ─────────────────────────────────────────────────── */
-export function UnbilledWidget({
-  tasks, month,
-}: {
-  tasks: { id: string; name: string }[];
-  month: string;
-}) {
-  const count = tasks.length;
+/* ── Profit (XP) widget ─────────────────────────────────────────────── */
+export function DeltaWidget({ current, previous, currency }: { current: number; previous: number; currency: string }) {
+  const delta  = current - previous;
+  const pct    = previous === 0 ? (current > 0 ? 100 : 0) : Math.abs(Math.round((delta / previous) * 100));
+  const up     = delta > 0;
+  const flat   = delta === 0;
+  const Icon   = flat ? Minus : up ? TrendingUp : TrendingDown;
+  const accent = flat ? 'rgba(255,255,255,0.4)' : up ? '#A78BFA' : '#F87171';
 
   return (
-    <Card h="100%">
-      <Group justify="space-between" mb="xs">
-        <Text size="xs" c="dimmed" fw={500}>Needs hours</Text>
-        <ThemeIcon variant="light" color={count > 0 ? 'yellow' : 'teal'} size="sm" radius="xl">
-          <Timer size={13} />
-        </ThemeIcon>
-      </Group>
+    <div style={{
+      background: 'rgba(0,0,0,0.35)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderLeft: '4px solid #A78BFA',
+      padding: '16px 18px',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+    }}>
+      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: '#A78BFA', marginBottom: 12 }}>
+        PROFIT (XP)
+      </Text>
 
-      <Group gap="xs" align="baseline" mb="xs">
-        <Text fw={700} size="xl">{count}</Text>
-        <Text size="xs" c="dimmed">on-demand task{count !== 1 ? 's' : ''} at 0h</Text>
+      <Text style={{ fontSize: 26, lineHeight: 1, color: '#E8E8F0', marginBottom: 6, letterSpacing: '-0.01em' }}>
+        + {formatMoney(current, currency)}
+      </Text>
+
+      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, marginBottom: 10 }}>
+        Kinh nghiệm tích lũy tháng
+      </Text>
+
+      <Group gap="xs">
+        <Icon size={13} style={{ color: accent }} />
+        <Text style={{ color: accent, fontSize: 13 }}>
+          {flat ? '±0%' : `${up ? '+' : '−'}${pct}%`}
+        </Text>
+        <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+          prev: {formatMoney(previous, currency)}
+        </Text>
       </Group>
+    </div>
+  );
+}
+
+/* ── Debt (Poison) widget ─────────────────────────────────────────── */
+export function DebtWidget({ amount, currency }: { amount: number; currency: string }) {
+  const accent = amount > 0 ? '#FCD34D' : '#22c55e';
+
+  return (
+    <div style={{
+      background: 'rgba(0,0,0,0.35)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderLeft: `4px solid ${accent}`,
+      padding: '16px 18px',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+    }}>
+      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: accent, marginBottom: 12 }}>
+        DEBT (POISON)
+      </Text>
+
+      <Text style={{ fontSize: 26, lineHeight: 1, color: accent, marginBottom: 6, textShadow: `0 0 16px ${accent}44`, letterSpacing: '-0.01em' }}>
+        {formatMoney(amount, currency)}
+      </Text>
+
+      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>
+        {amount > 0 ? 'Trạng thái công nợ hiện tại' : '// NO DEBT REMAINING'}
+      </Text>
+    </div>
+  );
+}
+
+/* ── Unbilled widget (legacy – kept for compatibility) ────────────── */
+export function UnbilledWidget({ tasks, month }: { tasks: { id: string; name: string }[]; month: string }) {
+  const count  = tasks.length;
+  const accent = count > 0 ? '#FCD34D' : '#4ADE80';
+
+  return (
+    <div style={{
+      background: 'rgba(0,0,0,0.35)',
+      border: '1px solid rgba(255,255,255,0.06)',
+      borderLeft: `4px solid ${accent}`,
+      padding: '16px 18px',
+      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
+    }}>
+      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: accent, marginBottom: 12 }}>
+        NEEDS_HOURS
+      </Text>
+
+      <Text style={{ fontSize: 44, lineHeight: 1, color: accent, marginBottom: 6, textShadow: `0 0 20px ${accent}44` }}>
+        {count}
+      </Text>
+      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, marginBottom: 10 }}>
+        TASK{count !== 1 ? 'S' : ''} @ 0H
+      </Text>
 
       {count === 0 ? (
-        <Text size="xs" c="dimmed">All on-demand tasks have hours logged.</Text>
+        <Text style={{ color: '#4ADE80', fontSize: 13 }}>{'// ALL HOURS LOGGED'}</Text>
       ) : (
-        <>
-          <List size="xs" c="dimmed" mb="xs">
-            {tasks.slice(0, 3).map(t => (
-              <List.Item key={t.id}>{t.name}</List.Item>
-            ))}
-            {count > 3 && <List.Item>+{count - 3} more…</List.Item>}
-          </List>
-          <Anchor
-            component={Link}
+        <div>
+          {tasks.slice(0, 3).map(t => (
+            <Text key={t.id} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {'>'} {t.name}
+            </Text>
+          ))}
+          {count > 3 && <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>{'+ ' + (count - 3) + ' MORE...'}</Text>}
+          <Link
             href={`/tasks?month=${month}&type=on_demand&view=table`}
-            size="xs"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+            style={{ color: '#A78BFA', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6 }}
           >
-            Log hours <ArrowRight size={12} />
-          </Anchor>
-        </>
+            LOG HOURS <ArrowRight size={11} />
+          </Link>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }

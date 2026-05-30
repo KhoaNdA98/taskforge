@@ -9,7 +9,7 @@ import {
 import { MonthPickerInput } from '@mantine/dates';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
-import { Plus, Download, Search, Layers, Table2, X } from 'lucide-react';
+import { Plus, Download, Search, Layers, Table2, X, LayoutGrid } from 'lucide-react';
 import dayjs from 'dayjs';
 import { formatMoney, formatHours } from '@/lib/format';
 import { exportTasksToExcel } from '@/lib/export';
@@ -18,9 +18,10 @@ import { type Client, type TaskWithClient, type TaskType, type TaskStatus, TASK_
 import { bulkUpdateTasks, bulkDeleteTasks } from './actions';
 import { TasksTable } from './tasks-table';
 import { TasksGrouped } from './tasks-grouped';
+import { TasksInventory } from './tasks-inventory';
 import { TasksForm } from './tasks-form';
 
-type ViewMode = 'table' | 'list';
+type ViewMode = 'table' | 'list' | 'grid';
 type GroupBy  = 'status' | 'client' | 'type' | 'none';
 type Filters  = { month: string; type: string; client: string; status: string; q: string; view: string; group: string };
 
@@ -35,7 +36,7 @@ export function TasksView({
   const router   = useRouter();
   const pathname = usePathname();
 
-  const [viewMode, setViewMode] = useState<ViewMode>((filters.view === 'list' ? 'list' : 'table') as ViewMode);
+  const [viewMode, setViewMode] = useState<ViewMode>((['list','grid'].includes(filters.view) ? filters.view : 'table') as ViewMode);
   const [groupBy,  setGroupBy]  = useState<GroupBy>(
     (['status', 'client', 'type', 'none'].includes(filters.group) ? filters.group : 'status') as GroupBy,
   );
@@ -271,8 +272,9 @@ export function TasksView({
             value={viewMode}
             onChange={v => changeView(v as ViewMode)}
             data={[
-              { value: 'table', label: <Group gap={4} wrap="nowrap"><Table2 size={14} /><span>Table</span></Group> },
-              { value: 'list',  label: <Group gap={4} wrap="nowrap"><Layers size={14} /><span>List</span></Group> },
+              { value: 'table', label: <Group gap={4} wrap="nowrap"><Table2    size={13} /><span>TABLE</span></Group> },
+              { value: 'list',  label: <Group gap={4} wrap="nowrap"><Layers    size={13} /><span>LIST</span></Group>  },
+              { value: 'grid',  label: <Group gap={4} wrap="nowrap"><LayoutGrid size={13} /><span>GRID</span></Group>  },
             ]}
           />
           <Button
@@ -281,17 +283,35 @@ export function TasksView({
             leftSection={<Download size={14} />}
             onClick={() => exportTasksToExcel(tasks, clients, currency, filters.month)}
             disabled={tasks.length === 0}
+            style={{
+              background: 'transparent',
+              border: '1px solid #22D3EE',
+              color: '#22D3EE',
+              boxShadow: '3px 3px 0px rgba(0,0,0,0.9)',
+              letterSpacing: '0.08em',
+            }}
           >
-            {UI.export}
+            XUẤT FILE EXCEL
           </Button>
-          <Button size="sm" leftSection={<Plus size={14} />} onClick={openAdd}>
-            {TASK.addTask}
+          <Button
+            size="sm"
+            leftSection={<Plus size={14} />}
+            onClick={openAdd}
+            style={{
+              background: '#7C3AED',
+              border: '1px solid #A78BFA',
+              color: '#fff',
+              boxShadow: '3px 3px 0px rgba(0,0,0,0.9), 0 0 12px rgba(124,58,237,0.35)',
+              letterSpacing: '0.08em',
+            }}
+          >
+            + NHẬN QUEST MỚI
           </Button>
         </Group>
       </Group>
 
       {/* ── Content ──────────────────────────────────────────────────── */}
-      {viewMode === 'table' ? (
+      {viewMode === 'table' && (
         <TasksTable
           tasks={tasks}
           clients={clients}
@@ -300,7 +320,8 @@ export function TasksView({
           onToggleSelect={toggleSelect}
           onToggleSelectAll={toggleSelectAll}
         />
-      ) : (
+      )}
+      {viewMode === 'list' && (
         <TasksGrouped
           tasks={tasks}
           clients={clients}
@@ -310,11 +331,20 @@ export function TasksView({
           onToggleSelect={toggleSelect}
         />
       )}
+      {viewMode === 'grid' && (
+        <TasksInventory
+          tasks={tasks}
+          clients={clients}
+          currency={currency}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+        />
+      )}
 
       {/* ── Bulk action bar ───────────────────────────────────────────── */}
       {selectedIds.size > 0 && (
         <Affix position={{ bottom: 24, left: '50%' }} style={{ transform: 'translateX(-50%)' }}>
-          <Paper shadow="lg" p="sm" radius="lg" withBorder style={{ background: 'white' }}>
+          <Paper shadow="lg" p="sm" withBorder>
             <Group gap="sm">
               <Text size="sm" fw={500}>{selectedIds.size} selected</Text>
               <Select

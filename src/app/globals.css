@@ -98,6 +98,78 @@ body::after {
   border: 1px solid rgba(255,255,255,0.08);
 }
 
+/* ── Pixel icon active pulse ────────────────────────────────────── */
+@keyframes tf-icon-pulse {
+  0%, 100% {
+    border-color: #7C3AED;
+    box-shadow: 0 0 4px rgba(124,58,237,0.6), inset 0 0 4px rgba(124,58,237,0.1);
+  }
+  50% {
+    border-color: #A78BFA;
+    box-shadow: 0 0 10px rgba(167,139,250,0.8), 0 0 20px rgba(167,139,250,0.2), inset 0 0 6px rgba(167,139,250,0.15);
+  }
+}
+
+.tf-icon-box { transition: border-color 0.1s, background 0.1s; }
+.tf-icon-active { animation: tf-icon-pulse 2s ease-in-out infinite; }
+
+/* ── Quest board cards ──────────────────────────────────────────── */
+.tf-quest-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+.tf-quest-card--todo:hover, .tf-quest-card--doing:hover {
+  transform: translateY(-4px) translateX(-4px);
+  border-color: #a855f7 !important;
+  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(168,85,247,0.25) inset !important;
+}
+.tf-quest-card--doing:hover {
+  border-color: #eab308 !important;
+  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(234,179,8,0.2) inset !important;
+}
+.tf-quest-card--done {
+  opacity: 0.52;
+}
+.tf-quest-card--done:hover {
+  opacity: 1;
+  transform: translateY(-4px) translateX(-4px);
+  border-color: #22c55e !important;
+  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(34,197,94,0.2) inset !important;
+}
+.tf-quest-card-actions {
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+.tf-quest-card:hover .tf-quest-card-actions {
+  opacity: 1;
+}
+
+/* ── Inventory grid ─────────────────────────────────────────────── */
+.tf-inv-slot {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+  position: relative;
+  z-index: 0;
+}
+.tf-inv-slot:hover {
+  transform: scale(1.06);
+  z-index: 10;
+  box-shadow: 0 0 14px rgba(139,92,246,0.35) !important;
+}
+.tf-inv-delete {
+  position: absolute;
+  top: 2px; right: 3px;
+  background: none; border: none; cursor: pointer;
+  color: rgba(248,113,113,0);
+  font-size: 14px; line-height: 1; padding: 1px 3px;
+  font-family: inherit; z-index: 3;
+  transition: color 0.1s;
+}
+.tf-inv-slot:hover .tf-inv-delete {
+  color: rgba(248,113,113,0.7);
+}
+.tf-inv-delete:hover {
+  color: #F87171 !important;
+}
+
 .tf-nav-signout { color: rgba(255,255,255,0.32) !important; }
 .tf-nav-signout:hover {
   color: #F87171 !important;
