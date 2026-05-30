@@ -409,7 +409,7 @@ function QuickAddRow({
     const trimmed = name.trim();
     if (!trimmed) { setActive(false); return; }
     startTransition(async () => {
-      const { error } = await quickAddTask(trimmed, clientId || null);
+      const { error } = await quickAddTask(trimmed, { client_id: clientId || null });
       if (error) { toast.error(`Failed: ${error}`); return; }
       setName(""); setClientId("");
       onAdded();

@@ -95,7 +95,7 @@ function ToastItem({
       exit={{    opacity: 0, y: 8,  scale: 0.96, transition: { duration: 0.18 } }}
       className={cn(
         "pointer-events-auto flex items-center gap-2.5 rounded-xl border px-4 py-3",
-        "tf-glass shadow-xl shadow-black/40",
+        "tf-glass shadow-xl shadow-black/15",
         "min-w-[260px] max-w-[360px] text-sm font-medium text-fg",
       )}
     >

@@ -74,25 +74,31 @@ export async function updateTaskField(
 }
 
 /**
- * Quick-create a task with just a name. Used by the "+" row in Table view.
+ * Quick-create a task with just a name + optional group overrides.
+ * Used by the "+" row in Table view and per-group add in List view.
  */
 export async function quickAddTask(
   name: string,
-  clientId: string | null,
+  overrides?: {
+    client_id?: string | null;
+    status?: TaskStatus;
+    type?: TaskType;
+  },
 ): Promise<{ id?: string; error?: string }> {
   await requireUser();
   const settings = await getSettings();
   const supabase = await createClient();
   const position = Date.now();
+  const type = overrides?.type ?? "on_demand";
   const { data, error } = await supabase
     .from("tasks")
     .insert({
       name,
-      type: "on_demand",
-      status: "todo",
-      client_id: clientId,
+      type,
+      status: overrides?.status ?? "todo",
+      client_id: overrides?.client_id ?? null,
       task_date: new Date().toISOString().slice(0, 10),
-      hours: 0,
+      hours: type === "on_demand" ? 0 : null,
       rate_snapshot: settings.hourly_rate,
       position,
     })

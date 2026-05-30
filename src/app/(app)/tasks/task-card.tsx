@@ -44,7 +44,7 @@ export const TaskCardStatic = forwardRef<
         group/card relative rounded-xl border p-3 select-none
         transition-colors duration-150
         ${overlay
-          ? "rotate-[1.5deg] scale-[1.04] border-accent/40 bg-panel shadow-2xl shadow-black/50 ring-1 ring-accent/25"
+          ? "rotate-[1.5deg] scale-[1.04] border-accent/40 bg-panel shadow-2xl shadow-accent/20 ring-1 ring-accent/25"
           : selected
             ? "border-accent/35 bg-accent-soft/20"
             : "border-border bg-panel/90 backdrop-blur-sm"}
@@ -147,7 +147,7 @@ export function SortableTaskCard({
       {...listeners}
       whileHover={isDragging ? {} : {
         y: -2,
-        boxShadow: "0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.07)",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.10), 0 0 0 1px rgba(0,0,0,0.06)",
       }}
       transition={isDragging ? { duration: 0 } : fluid}
     >

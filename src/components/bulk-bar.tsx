@@ -72,7 +72,7 @@ export function BulkBar({ selectedIds, clients, onClear, onDone }: BulkBarProps)
       exit={{ y: 80, opacity: 0, transition: { duration: 0.2 } }}
       className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
     >
-      <div className="flex items-center gap-2 rounded-2xl border border-border tf-glass px-4 py-3 shadow-2xl shadow-black/50">
+      <div className="flex items-center gap-2 rounded-2xl border border-border tf-glass px-4 py-3 shadow-2xl shadow-black/20">
         {/* Count */}
         <div className="flex items-center gap-2 border-r border-border pr-3">
           <CheckSquare size={15} className="text-accent" />

@@ -42,7 +42,7 @@ export function Modal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.22 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 bg-black/30 backdrop-blur-md"
             onClick={onClose}
             aria-hidden
           />
@@ -57,7 +57,7 @@ export function Modal({
             aria-modal="true"
             className={cn(
               "relative z-10 my-8 w-full max-w-lg rounded-2xl",
-              "border border-border tf-glass shadow-2xl shadow-black/60",
+              "border border-border tf-glass shadow-2xl shadow-black/15",
               className,
             )}
           >

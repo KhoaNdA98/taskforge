@@ -65,7 +65,7 @@ export function TiltCard({
           background: useTransform(
             [glowX, glowY],
             ([gx, gy]) =>
-              `radial-gradient(circle at ${gx}% ${gy}%, rgba(255,255,255,0.06) 0%, transparent 60%)`,
+              `radial-gradient(circle at ${gx}% ${gy}%, rgba(94,92,230,0.07) 0%, transparent 55%)`,
           ),
         }}
       />
@@ -89,7 +89,7 @@ export function HoverCard({
     <motion.div
       whileHover={{
         y: -3,
-        boxShadow: "0 16px 40px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.09)",
+        boxShadow: "0 14px 36px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05)",
       }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 380, damping: 24 }}

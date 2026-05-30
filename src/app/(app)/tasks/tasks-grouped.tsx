@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useTransition } from "react";
+import { useState, useCallback, useTransition, useRef, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   DndContext,
@@ -21,7 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useDroppable } from "@dnd-kit/core";
 import { motion, AnimatePresence } from "motion/react";
-import { ChevronRight, Layers } from "lucide-react";
+import { ChevronRight, Layers, Plus } from "lucide-react";
 import { Modal } from "@/components/modal";
 import { useToast } from "@/components/toast";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -38,7 +38,7 @@ import {
 } from "@/lib/types";
 import { SortableTaskCard, TaskCardStatic } from "./task-card";
 import { TasksForm } from "./tasks-form";
-import { updateTaskPosition, deleteTask } from "./actions";
+import { updateTaskPosition, deleteTask, quickAddTask } from "./actions";
 
 /* ── Types ───────────────────────────────────────────────────────────── */
 type GroupBy = "status" | "client" | "type" | "none";
@@ -115,6 +115,68 @@ function groupFieldUpdate(
   return undefined;
 }
 
+/** Convert a group into quickAddTask overrides so a new task lands in that group. */
+function groupOverrides(
+  groupBy: GroupBy,
+  groupId: string,
+): { client_id?: string | null; status?: TaskStatus; type?: TaskType } {
+  if (groupBy === "status") return { status: groupId as TaskStatus };
+  if (groupBy === "type")   return { type: groupId as TaskType };
+  if (groupBy === "client") return { client_id: groupId === "__none__" ? null : groupId };
+  return {};
+}
+
+/* ── Per-group inline quick add ──────────────────────────────────────── */
+function GroupQuickAdd({ onAdd }: { onAdd: (name: string) => Promise<void> }) {
+  const [active, setActive]   = useState(false);
+  const [name, setName]       = useState("");
+  const [pending, start]      = useTransition();
+  const inputRef              = useRef<HTMLInputElement>(null);
+
+  function activate() { setActive(true); setTimeout(() => inputRef.current?.focus(), 0); }
+
+  function submit() {
+    const trimmed = name.trim();
+    if (!trimmed) { setActive(false); return; }
+    start(async () => {
+      await onAdd(trimmed);
+      setName("");
+      setTimeout(() => inputRef.current?.focus(), 50);
+    });
+  }
+
+  function onKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter")  submit();
+    if (e.key === "Escape") { setActive(false); setName(""); }
+  }
+
+  return (
+    <div className="pl-6 pt-0.5">
+      {active ? (
+        <input
+          ref={inputRef}
+          value={name}
+          onChange={e => setName(e.target.value)}
+          onKeyDown={onKey}
+          onBlur={() => { name.trim() ? submit() : setActive(false); }}
+          placeholder="Task name… (Enter to add, Esc to cancel)"
+          disabled={pending}
+          className="w-full rounded-xl border border-accent/50 bg-panel px-3 py-2 text-sm text-fg outline-none ring-2 ring-accent/25 placeholder:text-muted"
+        />
+      ) : (
+        <motion.button
+          onClick={activate}
+          whileHover={{ x: 2 }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+          className="tf-ring flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted transition-colors hover:text-accent-fg"
+        >
+          <Plus size={14} /> Add task
+        </motion.button>
+      )}
+    </div>
+  );
+}
+
 /* ── Droppable group container ───────────────────────────────────────── */
 function DroppableGroup({ id, children }: { id: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id });
@@ -139,6 +201,7 @@ function GroupSection({
   onToggleSelect,
   onEdit,
   onDelete,
+  onQuickAdd,
 }: {
   group: Group;
   groupBy: GroupBy;
@@ -149,6 +212,7 @@ function GroupSection({
   onToggleSelect?: (id: string) => void;
   onEdit: (t: TaskWithClient) => void;
   onDelete: (t: TaskWithClient) => void;
+  onQuickAdd: (name: string) => Promise<void>;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -239,6 +303,9 @@ function GroupSection({
                 </div>
               </SortableContext>
             </DroppableGroup>
+
+            {/* Inline add directly into this group */}
+            <GroupQuickAdd onAdd={onQuickAdd} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -396,6 +463,13 @@ export function TasksGrouped({
     });
   }, [confirm, toast]);
 
+  // Add a task directly into a group (pre-fills the group's field)
+  const onQuickAdd = useCallback(async (groupId: string, name: string) => {
+    const { error } = await quickAddTask(name, groupOverrides(groupBy, groupId));
+    if (error) { toast.error(`Failed: ${error}`); return; }
+    router.refresh();
+  }, [groupBy, router, toast]);
+
   const groupByOptions: { v: GroupBy; label: string }[] = [
     { v: "status",  label: FILTER.groupByStatus },
     { v: "client",  label: FILTER.groupByClient },
@@ -454,6 +528,7 @@ export function TasksGrouped({
               onToggleSelect={onToggleSelect}
               onEdit={setEditTask}
               onDelete={onDelete}
+              onQuickAdd={(name) => onQuickAdd(group.id, name)}
             />
           ))}
         </div>

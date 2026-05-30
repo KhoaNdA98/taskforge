@@ -24,7 +24,7 @@ export function Button({
         "disabled:cursor-not-allowed disabled:opacity-40",
         size === "sm" ? "h-8 px-3 text-xs" : "h-10 px-4 text-sm",
         variant === "primary" &&
-          "bg-accent text-white shadow-[0_0_0_1px_rgba(124,108,255,0.5),0_4px_12px_rgba(124,108,255,0.25)] hover:bg-accent/90",
+          "bg-accent text-white shadow-[0_1px_2px_rgba(94,92,230,0.3),0_4px_14px_rgba(94,92,230,0.28)] hover:bg-accent/90",
         variant === "secondary" &&
           "border border-border bg-panel-2 text-fg hover:border-border-mid hover:bg-panel-3",
         variant === "ghost" && "text-fg-2 hover:bg-panel-2 hover:text-fg",

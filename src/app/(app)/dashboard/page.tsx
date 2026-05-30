@@ -7,11 +7,19 @@ import { Card, Badge, PageHeader, EmptyState, StatCardsSkeleton, TableSkeleton }
 import { CountUpMoney, CountUpHours } from "@/components/count-up";
 import { TiltCard } from "@/components/motion-card";
 import { FadeUp, FadeLeft, FadeRight } from "@/components/animate";
+import { CompletionWidget, DeltaWidget, UnbilledWidget } from "./widgets";
 import { formatMoney, formatDate, currentMonth, monthRange, monthLabel } from "@/lib/format";
 import { DASHBOARD } from "@/lib/strings";
 import { staggerDelay } from "@/lib/motion";
 import { type Client, type TaskWithClient, TASK_TYPE_LABEL, TASK_STATUS_LABEL } from "@/lib/types";
 import { MonthSelect } from "./month-select";
+
+/** Previous month in YYYY-MM. */
+function prevMonth(ym: string): string {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 2, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
@@ -28,6 +36,10 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
 
       <Suspense fallback={<StatCardsSkeleton />}>
         <DashboardStats month={month} />
+      </Suspense>
+
+      <Suspense fallback={<div className="mt-3 grid gap-3 sm:grid-cols-3"><Card className="h-32" /><Card className="h-32" /><Card className="h-32" /></div>}>
+        <InsightsRow month={month} />
       </Suspense>
 
       <div className="mt-3 grid gap-3 lg:grid-cols-5">
@@ -89,6 +101,54 @@ async function DashboardStats({ month }: { month: string }) {
           </TiltCard>
         </FadeUp>
       ))}
+    </div>
+  );
+}
+
+/* ── Insights widgets row ──────────────────────────────────────────────── */
+async function InsightsRow({ month }: { month: string }) {
+  const settings = await getSettings();
+  const supabase = await createClient();
+  const cur = settings.currency;
+
+  const cur_r = monthRange(month);
+  const prev  = prevMonth(month);
+  const prev_r = monthRange(prev);
+
+  const [{ data: curRows }, { data: prevRows }, { data: clientRows }] = await Promise.all([
+    supabase.from("tasks").select("id, name, type, hours, amount, status").gte("task_date", cur_r.start).lte("task_date", cur_r.end),
+    supabase.from("tasks").select("type, amount").eq("type", "on_demand").gte("task_date", prev_r.start).lte("task_date", prev_r.end),
+    supabase.from("clients").select("is_maintain_active, monthly_retainer"),
+  ]);
+
+  const tasks = (curRows ?? []) as Pick<TaskWithClient, "id" | "name" | "type" | "hours" | "amount" | "status">[];
+
+  // Status counts
+  const todo  = tasks.filter(t => t.status === "todo").length;
+  const doing = tasks.filter(t => t.status === "doing").length;
+  const done  = tasks.filter(t => t.status === "done").length;
+
+  // Revenue current vs previous (on-demand + current retainer baseline)
+  const retainer = (clientRows ?? []).filter(c => c.is_maintain_active).reduce((s, c) => s + Number(c.monthly_retainer), 0);
+  const curOnDemand  = tasks.filter(t => t.type === "on_demand").reduce((s, t) => s + Number(t.amount), 0);
+  const prevOnDemand = (prevRows ?? []).reduce((s, t) => s + Number(t.amount), 0);
+
+  // Unbilled: on-demand tasks with no hours logged
+  const unbilled = tasks
+    .filter(t => t.type === "on_demand" && (t.hours == null || Number(t.hours) === 0))
+    .map(t => ({ id: t.id, name: t.name }));
+
+  return (
+    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <FadeUp delay={0.2}>
+        <CompletionWidget todo={todo} doing={doing} done={done} />
+      </FadeUp>
+      <FadeUp delay={0.26}>
+        <DeltaWidget current={curOnDemand + retainer} previous={prevOnDemand + retainer} currency={cur} />
+      </FadeUp>
+      <FadeUp delay={0.32}>
+        <UnbilledWidget tasks={unbilled} month={month} />
+      </FadeUp>
     </div>
   );
 }
