@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button, Input, Textarea, Field, Card, Badge, EmptyState } from "@/components/ui";
-import { Modal } from "@/components/modal";
+import { Modal, ModalField } from "@/components/modal";
+import { HoverCard } from "@/components/motion-card";
 import { useToast } from "@/components/toast";
 import { useConfirm } from "@/components/confirm-dialog";
 import { formatMoney } from "@/lib/format";
 import { CLIENT } from "@/lib/strings";
-import { fadeUp, staggerContainer, gentle } from "@/lib/motion";
+import { fadeUp, staggerContainer, gentle, staggerItem } from "@/lib/motion";
 import type { Client } from "@/lib/types";
 import { saveClient, deleteClient, type ClientActionState } from "./actions";
 
@@ -61,8 +62,9 @@ export function ClientsView({ clients, currency }: { clients: Client[]; currency
           animate="animate"
         >
           {clients.map((c) => (
-            <motion.div key={c.id} variants={fadeUp}>
-              <Card className="tf-scan-wrap flex flex-col p-4 transition-shadow hover:shadow-lg hover:shadow-black/20">
+            <motion.div key={c.id} variants={staggerItem}>
+              <HoverCard>
+              <Card className="tf-scan-wrap flex flex-col p-4">
                 <div className="flex items-start justify-between gap-2">
                   <p className="font-medium text-fg">{c.name}</p>
                   <div className="flex gap-1">
@@ -101,6 +103,7 @@ export function ClientsView({ clients, currency }: { clients: Client[]; currency
 
                 {c.note && <p className="mt-2 line-clamp-2 text-xs text-muted">{c.note}</p>}
               </Card>
+              </HoverCard>
             </motion.div>
           ))}
         </motion.div>
@@ -129,28 +132,36 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
     <form action={action} className="space-y-4">
       {client && <input type="hidden" name="id" value={client.id} />}
 
-      <Field label={CLIENT.fields.name}>
-        <Input name="name" defaultValue={client?.name ?? ""} required autoFocus />
-      </Field>
+      <ModalField>
+        <Field label={CLIENT.fields.name}>
+          <Input name="name" defaultValue={client?.name ?? ""} required autoFocus />
+        </Field>
+      </ModalField>
 
-      <Field label={CLIENT.fields.retainer} hint={CLIENT.fields.retainerHint}>
-        <Input name="monthly_retainer" type="number" min={0} step={1000}
-          defaultValue={client?.monthly_retainer ?? 0} className="font-mono" />
-      </Field>
+      <ModalField>
+        <Field label={CLIENT.fields.retainer} hint={CLIENT.fields.retainerHint}>
+          <Input name="monthly_retainer" type="number" min={0} step={1000}
+            defaultValue={client?.monthly_retainer ?? 0} className="font-mono" />
+        </Field>
+      </ModalField>
 
-      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-base/40 px-3 py-2.5 transition-colors hover:bg-panel-2">
-        <input type="checkbox" name="is_maintain_active"
-          defaultChecked={client?.is_maintain_active ?? false}
-          className="h-4 w-4 accent-[var(--color-accent)]" />
-        <span className="text-sm text-fg">
-          {CLIENT.fields.maintainActive}
-          <span className="block text-xs text-muted">{CLIENT.fields.maintainActiveHint}</span>
-        </span>
-      </label>
+      <ModalField>
+        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-base/40 px-3 py-2.5 transition-colors hover:bg-panel-2">
+          <input type="checkbox" name="is_maintain_active"
+            defaultChecked={client?.is_maintain_active ?? false}
+            className="h-4 w-4 accent-[var(--color-accent)]" />
+          <span className="text-sm text-fg">
+            {CLIENT.fields.maintainActive}
+            <span className="block text-xs text-muted">{CLIENT.fields.maintainActiveHint}</span>
+          </span>
+        </label>
+      </ModalField>
 
-      <Field label={CLIENT.fields.note}>
-        <Textarea name="note" defaultValue={client?.note ?? ""} />
-      </Field>
+      <ModalField>
+        <Field label={CLIENT.fields.note}>
+          <Textarea name="note" defaultValue={client?.note ?? ""} />
+        </Field>
+      </ModalField>
 
       <AnimatePresence>
         {state.error && (
@@ -158,11 +169,13 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
         )}
       </AnimatePresence>
 
-      <div className="flex justify-end gap-2 pt-1">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? CLIENT.saving : CLIENT.save}
-        </Button>
-      </div>
+      <ModalField>
+        <div className="flex justify-end gap-2 pt-1">
+          <Button type="submit" variant="primary" disabled={pending}>
+            {pending ? CLIENT.saving : CLIENT.save}
+          </Button>
+        </div>
+      </ModalField>
     </form>
   );
 }

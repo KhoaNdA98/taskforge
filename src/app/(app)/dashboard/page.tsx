@@ -5,8 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/dal";
 import { Card, Badge, PageHeader, EmptyState, StatCardsSkeleton, TableSkeleton } from "@/components/ui";
 import { CountUpMoney, CountUpHours } from "@/components/count-up";
+import { TiltCard } from "@/components/motion-card";
+import { FadeUp, FadeLeft, FadeRight } from "@/components/animate";
 import { formatMoney, formatDate, currentMonth, monthRange, monthLabel } from "@/lib/format";
 import { DASHBOARD } from "@/lib/strings";
+import { staggerDelay } from "@/lib/motion";
 import { type Client, type TaskWithClient, TASK_TYPE_LABEL, TASK_STATUS_LABEL } from "@/lib/types";
 import { MonthSelect } from "./month-select";
 
@@ -39,6 +42,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   );
 }
 
+/* ── Stat cards ────────────────────────────────────────────────────────── */
 async function DashboardStats({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -53,9 +57,9 @@ async function DashboardStats({ month }: { month: string }) {
   const clients = (clientRows ?? []) as Client[];
   const tasks   = (taskRows   ?? []) as Pick<TaskWithClient, "type" | "hours" | "amount" | "status">[];
 
-  const onDemandHours   = tasks.filter(t => t.type === "on_demand").reduce((s,t) => s + Number(t.hours  ?? 0), 0);
-  const onDemandRevenue = tasks.filter(t => t.type === "on_demand").reduce((s,t) => s + Number(t.amount),    0);
-  const retainerRevenue = clients.filter(c => c.is_maintain_active).reduce((s,c) => s + Number(c.monthly_retainer), 0);
+  const onDemandHours   = tasks.filter(t => t.type === "on_demand").reduce((s, t) => s + Number(t.hours  ?? 0), 0);
+  const onDemandRevenue = tasks.filter(t => t.type === "on_demand").reduce((s, t) => s + Number(t.amount),    0);
+  const retainerRevenue = clients.filter(c => c.is_maintain_active).reduce((s, c) => s + Number(c.monthly_retainer), 0);
   const total           = onDemandRevenue + retainerRevenue;
 
   const stats = [
@@ -68,23 +72,28 @@ async function DashboardStats({ month }: { month: string }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {stats.map(({ icon: Icon, label, tone, kind, raw }, i) => (
-        <Card key={label} className="tf-rise tf-scan-wrap p-4" style={{ animationDelay: `${i * 55}ms` }}>
-          <div className="flex items-center gap-2 text-muted">
-            <Icon size={16} />
-            <span className="font-mono text-[11px] uppercase tracking-widest">{label}</span>
-          </div>
-          <p className={`tf-pop mt-3 text-2xl font-semibold tracking-tight ${tone}`}
-            style={{ animationDelay: `${i * 55 + 100}ms` }}>
-            {kind === "hours"
-              ? <CountUpHours hours={raw} />
-              : <CountUpMoney amount={raw} currency={cur} />}
-          </p>
-        </Card>
+        <FadeUp key={label} delay={i * 0.06}>
+          <TiltCard className="group tf-scan-wrap h-full rounded-2xl border border-border bg-panel/80 backdrop-blur-sm">
+            <div className="p-4">
+              <div className="flex items-center gap-2 text-muted transition-colors group-hover:text-fg-2">
+                <Icon size={16} />
+                <span className="font-mono text-[11px] uppercase tracking-widest">{label}</span>
+              </div>
+              <p className={`tf-pop mt-3 text-2xl font-semibold tracking-tight ${tone}`}
+                style={{ animationDelay: `${i * 0.06 + 0.1}s` }}>
+                {kind === "hours"
+                  ? <CountUpHours hours={raw} />
+                  : <CountUpMoney amount={raw} currency={cur} />}
+              </p>
+            </div>
+          </TiltCard>
+        </FadeUp>
       ))}
     </div>
   );
 }
 
+/* ── Recent tasks ──────────────────────────────────────────────────────── */
 async function RecentTasks({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -96,41 +105,44 @@ async function RecentTasks({ month }: { month: string }) {
     .gte("task_date", start).lte("task_date", end)
     .order("task_date", { ascending: false }).limit(8);
 
-  const tasks    = (data ?? []) as TaskWithClient[];
+  const tasks     = (data ?? []) as TaskWithClient[];
   const doneCount = tasks.filter(t => t.status === "done").length;
 
   return (
-    <Card className="lg:col-span-3">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">{DASHBOARD.recentTasks}</h2>
-        <Link href="/tasks" className="inline-flex items-center gap-1 text-xs text-accent-fg hover:underline">
-          {DASHBOARD.viewAll} <ArrowRight size={13} />
-        </Link>
-      </div>
-      {tasks.length === 0 ? (
-        <EmptyState title={DASHBOARD.noTasks} description={DASHBOARD.noTasksDetail} />
-      ) : (
-        <ul className="divide-y divide-border-soft">
-          {tasks.map(t => (
-            <li key={t.id} className="flex items-center gap-3 px-4 py-2.5 text-sm">
-              <span className="w-16 shrink-0 font-mono text-xs text-muted">{formatDate(t.task_date).slice(0,5)}</span>
-              <span className="flex-1 truncate text-fg">{t.name}</span>
-              <Badge tone={t.type === "maintain" ? "accent" : "teal"}>{TASK_TYPE_LABEL[t.type]}</Badge>
-              <span className="w-28 shrink-0 text-right font-mono text-xs text-muted">
-                {t.type === "on_demand" ? formatMoney(t.amount, cur) : TASK_STATUS_LABEL[t.status]}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted">
-        <span>{DASHBOARD.taskCount(tasks.length)}</span>
-        <span>{DASHBOARD.doneCount(doneCount)}</span>
-      </div>
-    </Card>
+    <FadeUp delay={0.28} className="lg:col-span-3">
+      <Card>
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="text-sm font-semibold">{DASHBOARD.recentTasks}</h2>
+          <Link href="/tasks" className="inline-flex items-center gap-1 text-xs text-accent-fg transition-colors hover:text-accent">
+            {DASHBOARD.viewAll} <ArrowRight size={13} />
+          </Link>
+        </div>
+        {tasks.length === 0 ? (
+          <EmptyState title={DASHBOARD.noTasks} description={DASHBOARD.noTasksDetail} />
+        ) : (
+          <ul className="divide-y divide-border-soft">
+            {tasks.map((t, i) => (
+              <FadeLeft key={t.id} delay={0.32 + staggerDelay(i, 6)} className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-panel-2/40">
+                <span className="w-16 shrink-0 font-mono text-xs text-muted">{formatDate(t.task_date).slice(0,5)}</span>
+                <span className="flex-1 truncate text-fg">{t.name}</span>
+                <Badge tone={t.type === "maintain" ? "accent" : "teal"}>{TASK_TYPE_LABEL[t.type]}</Badge>
+                <span className="w-28 shrink-0 text-right font-mono text-xs text-muted">
+                  {t.type === "on_demand" ? formatMoney(t.amount, cur) : TASK_STATUS_LABEL[t.status]}
+                </span>
+              </FadeLeft>
+            ))}
+          </ul>
+        )}
+        <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted">
+          <span>{DASHBOARD.taskCount(tasks.length)}</span>
+          <span>{DASHBOARD.doneCount(doneCount)}</span>
+        </div>
+      </Card>
+    </FadeUp>
   );
 }
 
+/* ── Per-client revenue ────────────────────────────────────────────────── */
 async function ClientRevenue({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -145,7 +157,7 @@ async function ClientRevenue({ month }: { month: string }) {
   const clients = (clientRows ?? []) as Client[];
   const tasks   = (taskRows   ?? []) as unknown as Pick<TaskWithClient,"client_id"|"amount"|"client">[];
 
-  const byClient = new Map<string,{name:string;amount:number}>();
+  const byClient = new Map<string, { name:string; amount:number }>();
   for (const t of tasks) {
     const key  = t.client_id ?? "__none__";
     const name = (t.client as {name:string}|null)?.name ?? "(unassigned)";
@@ -157,28 +169,30 @@ async function ClientRevenue({ month }: { month: string }) {
   const retainerTotal  = clients.filter(c => c.is_maintain_active).reduce((s,c) => s + Number(c.monthly_retainer), 0);
 
   return (
-    <Card className="lg:col-span-2">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold">{DASHBOARD.revenueByClient}</h2>
-      </div>
-      {clientRevenue.length === 0 ? (
-        <EmptyState title={DASHBOARD.noRevenue} />
-      ) : (
-        <ul className="divide-y divide-border-soft">
-          {clientRevenue.map(c => (
-            <li key={c.name} className="flex items-center justify-between px-4 py-2.5 text-sm">
-              <span className="truncate text-fg">{c.name}</span>
-              <span className="font-mono text-xs text-teal">{formatMoney(c.amount, cur)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {retainerTotal > 0 && (
-        <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs">
-          <span className="text-muted">Retainer (maintain)</span>
-          <span className="font-mono text-accent-fg">{formatMoney(retainerTotal, cur)}</span>
+    <FadeUp delay={0.35} className="lg:col-span-2">
+      <Card>
+        <div className="border-b border-border px-4 py-3">
+          <h2 className="text-sm font-semibold">{DASHBOARD.revenueByClient}</h2>
         </div>
-      )}
-    </Card>
+        {clientRevenue.length === 0 ? (
+          <EmptyState title={DASHBOARD.noRevenue} />
+        ) : (
+          <ul className="divide-y divide-border-soft">
+            {clientRevenue.map((c, i) => (
+              <FadeRight key={c.name} delay={0.38 + staggerDelay(i, 5)} className="flex items-center justify-between px-4 py-2.5 text-sm transition-colors hover:bg-panel-2/40">
+                <span className="truncate text-fg">{c.name}</span>
+                <span className="font-mono text-xs text-teal">{formatMoney(c.amount, cur)}</span>
+              </FadeRight>
+            ))}
+          </ul>
+        )}
+        {retainerTotal > 0 && (
+          <div className="flex items-center justify-between border-t border-border px-4 py-2.5 text-xs">
+            <span className="text-muted">Retainer (maintain)</span>
+            <span className="font-mono text-accent-fg">{formatMoney(retainerTotal, cur)}</span>
+          </div>
+        )}
+      </Card>
+    </FadeUp>
   );
 }
