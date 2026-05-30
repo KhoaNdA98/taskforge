@@ -1,18 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import {
-  SimpleGrid, Text, Group, Title, Stack,
-  Skeleton,
-} from '@mantine/core';
-import {
-  Clock, Wallet, Repeat, Coins, ArrowRight,
-} from 'lucide-react';
-
-const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-  todo:  { label: 'TODO', color: '#A78BFA' },
-  doing: { label: 'WIP',  color: '#FCD34D' },
-  done:  { label: 'DONE', color: '#22c55e' },
-};
+import { ArrowRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getSettings } from '@/lib/dal';
 import { CompletionWidget, DeltaWidget, DebtWidget } from './widgets';
@@ -20,6 +8,12 @@ import { formatMoney, formatDate, currentMonth, monthRange, monthLabel } from '@
 import { DASHBOARD } from '@/lib/strings';
 import { type Client, type TaskWithClient } from '@/lib/types';
 import { MonthSelect } from './month-select';
+
+const STATUS_BADGE: Record<string, { label: string; color: string }> = {
+  todo:  { label: 'TODO', color: '#a855f7' },
+  doing: { label: 'WIP',  color: '#eab308' },
+  done:  { label: 'DONE', color: '#22c55e' },
+};
 
 function prevMonth(ym: string): string {
   const [y, m] = ym.split('-').map(Number);
@@ -35,44 +29,58 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const month = one(sp.month) || currentMonth();
 
   return (
-    <Stack gap="lg">
-      <Group justify="space-between" align="flex-end">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-end justify-between">
         <div>
-          <Title order={2} style={{ letterSpacing: '-0.02em' }}>{DASHBOARD.title}</Title>
-          <Text size="sm" c="dimmed">Overview for {monthLabel(month)}</Text>
+          <div className="px-section-title">{DASHBOARD.title}</div>
+          <div className="font-pixel text-[14px] text-white/30 tracking-[0.06em] mt-0.5">
+            Overview for {monthLabel(month)}
+          </div>
         </div>
         <MonthSelect month={month} />
-      </Group>
+      </div>
 
-      <Suspense fallback={<SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md"><Skeleton h={96} radius="lg" /><Skeleton h={96} radius="lg" /><Skeleton h={96} radius="lg" /><Skeleton h={96} radius="lg" /></SimpleGrid>}>
+      {/* Stat cards */}
+      <Suspense fallback={<StatsSkeleton />}>
         <DashboardStats month={month} />
       </Suspense>
 
-      <Suspense fallback={<SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md"><Skeleton h={128} radius="lg" /><Skeleton h={128} radius="lg" /><Skeleton h={128} radius="lg" /></SimpleGrid>}>
+      {/* Insight widgets */}
+      <Suspense fallback={<div className="grid grid-cols-3 gap-4"><SkeletonBox /><SkeletonBox /><SkeletonBox /></div>}>
         <InsightsRow month={month} />
       </Suspense>
 
-      <Suspense fallback={<Skeleton h={160} />}>
+      {/* Boss stage */}
+      <Suspense fallback={<SkeletonBox h="h-28" />}>
         <BossStage month={month} />
       </Suspense>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--mantine-spacing-md)' }}>
-        <div style={{ gridColumn: 'span 3', minWidth: 0 }}>
-          <Suspense fallback={<Skeleton h={240} />}>
+      {/* Recent + Revenue */}
+      <div className="grid grid-cols-5 gap-4">
+        <div className="col-span-3 min-w-0">
+          <Suspense fallback={<SkeletonBox h="h-60" />}>
             <RecentTasks month={month} />
           </Suspense>
         </div>
-        <div style={{ gridColumn: 'span 2', minWidth: 0 }}>
-          <Suspense fallback={<Skeleton h={240} />}>
+        <div className="col-span-2 min-w-0">
+          <Suspense fallback={<SkeletonBox h="h-60" />}>
             <ClientRevenue month={month} />
           </Suspense>
         </div>
       </div>
-    </Stack>
+    </div>
   );
 }
 
-/* ── Stat cards ─────────────────────────────────────────────────────── */
+function SkeletonBox({ h = 'h-24' }: { h?: string }) {
+  return <div className={`${h} bg-px-card border border-px-border animate-pulse`} />;
+}
+function StatsSkeleton() {
+  return <div className="grid grid-cols-2 lg:grid-cols-4 gap-3"><SkeletonBox /><SkeletonBox /><SkeletonBox /><SkeletonBox /></div>;
+}
+
+/* ── Stat cards ─────────────────────────────────────────────── */
 async function DashboardStats({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -93,51 +101,36 @@ async function DashboardStats({ month }: { month: string }) {
   const total           = onDemandRevenue + retainerRevenue;
 
   const stats = [
-    { icon: Clock,  label: DASHBOARD.stats.onDemandHours,   color: 'gray',   value: `${onDemandHours}h`                     },
-    { icon: Wallet, label: DASHBOARD.stats.onDemandRevenue, color: 'teal',   value: formatMoney(onDemandRevenue, cur)        },
-    { icon: Repeat, label: DASHBOARD.stats.retainer,        color: 'indigo', value: formatMoney(retainerRevenue, cur)        },
-    { icon: Coins,  label: DASHBOARD.stats.total,           color: 'gray',   value: formatMoney(total, cur)                  },
+    { label: DASHBOARD.stats.onDemandHours,   accent: 'rgba(255,255,255,0.35)', value: `${onDemandHours}h`                },
+    { label: DASHBOARD.stats.onDemandRevenue, accent: '#22c55e',                value: formatMoney(onDemandRevenue, cur)   },
+    { label: DASHBOARD.stats.retainer,        accent: '#a855f7',                value: formatMoney(retainerRevenue, cur)   },
+    { label: DASHBOARD.stats.total,           accent: '#06b6d4',                value: formatMoney(total, cur)             },
   ];
 
-  const accentMap: Record<string, string> = {
-    gray: 'rgba(255,255,255,0.3)', teal: '#4ADE80', indigo: '#A78BFA',
-  };
-
   return (
-    <SimpleGrid cols={{ base: 2, lg: 4 }} spacing="md">
-      {stats.map(({ label, color, value }) => {
-        const accent = accentMap[color] ?? 'rgba(255,255,255,0.3)';
-        return (
-          <div key={label} style={{
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderTop: `2px solid ${accent}`,
-            padding: '14px 16px',
-            background: 'rgba(0,0,0,0.3)',
-            position: 'relative',
-            boxShadow: `0 0 20px ${accent}0A`,
-          }}>
-            <div style={{ fontSize: 11, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.3)', marginBottom: 8 }}>
-              {label.toUpperCase().replace(/ /g, '_')}
-            </div>
-            <div style={{ fontSize: 28, lineHeight: 1, color: accent, textShadow: `0 0 16px ${accent}55`, fontFamily: 'inherit' }}>
-              {value}
-            </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {stats.map(({ label, accent, value }) => (
+        <div key={label} className="bg-black/30 border border-white/[0.08] p-4 shadow-hard relative overflow-hidden"
+             style={{ borderTop: `2px solid ${accent}` }}>
+          <div className="font-pixel text-[11px] tracking-widest2 mb-2 text-white/30 uppercase">
+            {label.replace(/ /g, '_')}
           </div>
-        );
-      })}
-    </SimpleGrid>
+          <div className="font-pixel text-[28px] leading-none" style={{ color: accent, textShadow: `0 0 16px ${accent}55` }}>
+            {value}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-/* ── Insights widgets row ───────────────────────────────────────────── */
+/* ── Insights row ────────────────────────────────────────────── */
 async function InsightsRow({ month }: { month: string }) {
   const settings = await getSettings();
   const supabase = await createClient();
   const cur = settings.currency;
-
   const cur_r  = monthRange(month);
-  const prev   = prevMonth(month);
-  const prev_r = monthRange(prev);
+  const prev_r = monthRange(prevMonth(month));
 
   const [{ data: curRows }, { data: prevRows }, { data: clientRows }] = await Promise.all([
     supabase.from('tasks').select('id, name, type, hours, amount, status').gte('task_date', cur_r.start).lte('task_date', cur_r.end),
@@ -146,29 +139,24 @@ async function InsightsRow({ month }: { month: string }) {
   ]);
 
   const tasks = (curRows ?? []) as Pick<TaskWithClient, 'id' | 'name' | 'type' | 'hours' | 'amount' | 'status'>[];
-
   const todo  = tasks.filter(t => t.status === 'todo').length;
   const doing = tasks.filter(t => t.status === 'doing').length;
   const done  = tasks.filter(t => t.status === 'done').length;
-
   const retainer     = (clientRows ?? []).filter(c => c.is_maintain_active).reduce((s, c) => s + Number(c.monthly_retainer), 0);
   const curOnDemand  = tasks.filter(t => t.type === 'on_demand').reduce((s, t) => s + Number(t.amount), 0);
   const prevOnDemand = (prevRows ?? []).reduce((s, t) => s + Number(t.amount), 0);
-
-  const debt = tasks
-    .filter(t => t.type === 'on_demand' && (t.status === 'todo' || t.status === 'doing'))
-    .reduce((s, t) => s + Number(t.amount), 0);
+  const debt = tasks.filter(t => t.type === 'on_demand' && (t.status === 'todo' || t.status === 'doing')).reduce((s, t) => s + Number(t.amount), 0);
 
   return (
-    <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       <CompletionWidget todo={todo} doing={doing} done={done} />
       <DeltaWidget current={curOnDemand + retainer} previous={prevOnDemand + retainer} currency={cur} />
       <DebtWidget amount={debt} currency={cur} />
-    </SimpleGrid>
+    </div>
   );
 }
 
-/* ── Recent tasks ───────────────────────────────────────────────────── */
+/* ── Recent tasks ─────────────────────────────────────────────── */
 async function RecentTasks({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -184,91 +172,44 @@ async function RecentTasks({ month }: { month: string }) {
   const doneCount = tasks.filter(t => t.status === 'done').length;
 
   return (
-    <div style={{
-      border: '1px solid rgba(139,92,246,0.2)',
-      background: 'rgba(0,0,0,0.25)',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-      height: '100%',
-    }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '10px 14px',
-        borderBottom: '1px solid rgba(139,92,246,0.2)',
-        background: 'rgba(139,92,246,0.06)',
-      }}>
-        <span style={{ color: '#22D3EE', fontSize: 13, letterSpacing: '0.12em' }}>
-          // {DASHBOARD.recentTasks.toUpperCase()}
-        </span>
-        <Link href="/tasks" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#A78BFA', textDecoration: 'none', letterSpacing: '0.06em' }}>
+    <div className="border border-px-purple/20 bg-black/25 shadow-hard h-full">
+      <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-px-purple/20 bg-px-purple/5">
+        <span className="font-pixel text-[13px] text-px-cyan tracking-[0.12em]">// {DASHBOARD.recentTasks.toUpperCase()}</span>
+        <Link href="/tasks" className="font-pixel text-[13px] text-px-purple no-underline flex items-center gap-1 tracking-[0.06em]">
           {DASHBOARD.viewAll} <ArrowRight size={12} />
         </Link>
       </div>
-
       {/* Table header */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '46px 1fr 80px 92px 80px',
-        gap: 8, padding: '6px 14px',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        fontSize: 11, letterSpacing: '0.12em', color: '#22D3EE',
-      }}>
-        <span>DATE</span>
-        <span>NHIỆM VỤ</span>
-        <span>KHÁCH HÀNG</span>
-        <span style={{ textAlign: 'right' }}>PHẦN THƯỞNG</span>
-        <span style={{ textAlign: 'right' }}>TRẠNG THÁI</span>
+      <div className="grid font-pixel text-[11px] tracking-[0.12em] text-px-cyan px-3.5 py-1.5 border-b border-white/5"
+           style={{ gridTemplateColumns: '46px 1fr 80px 92px 80px' }}>
+        <span>DATE</span><span>NHIỆM VỤ</span><span>KHÁCH</span>
+        <span className="text-right">THƯỞNG</span><span className="text-right">STATUS</span>
       </div>
-
       {tasks.length === 0 ? (
-        <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 15, letterSpacing: '0.08em' }}>
-          {'// NO QUESTS LOGGED'}
-        </div>
+        <div className="p-8 text-center font-pixel text-[15px] text-white/20 tracking-[0.08em]">// NO QUESTS LOGGED</div>
       ) : (
         tasks.map(t => {
           const badge = STATUS_BADGE[t.status] ?? { label: t.status, color: '#fff' };
           const clientName = (t.client as { name: string } | null)?.name ?? '—';
           return (
-            <div key={t.id} style={{
-              display: 'grid', gridTemplateColumns: '46px 1fr 80px 92px 80px',
-              gap: 8, padding: '6px 14px',
-              borderBottom: '1px solid rgba(255,255,255,0.04)',
-              borderLeft: `2px solid ${badge.color}44`,
-              alignItems: 'center',
-            }}>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.04em' }}>
-                {formatDate(t.task_date).slice(0, 5)}
-              </span>
-              <span style={{
-                fontSize: 14, color: t.status === 'done' ? 'rgba(255,255,255,0.5)' : '#E8E8F0',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {t.name}
-              </span>
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {clientName}
-              </span>
-              <span style={{ fontSize: 13, color: '#22c55e', textAlign: 'right', letterSpacing: '0.02em' }}>
+            <div key={t.id} className="grid items-center px-3.5 py-1.5 border-b border-white/[0.04]"
+                 style={{ gridTemplateColumns: '46px 1fr 80px 92px 80px', borderLeft: `2px solid ${badge.color}44` }}>
+              <span className="font-pixel text-[12px] text-white/30">{formatDate(t.task_date).slice(0, 5)}</span>
+              <span className="font-pixel text-[14px] overflow-hidden text-ellipsis whitespace-nowrap"
+                    style={{ color: t.status === 'done' ? 'rgba(255,255,255,0.5)' : '#E8E8F0' }}>{t.name}</span>
+              <span className="font-pixel text-[12px] text-white/35 overflow-hidden text-ellipsis whitespace-nowrap">{clientName}</span>
+              <span className="font-pixel text-[13px] text-px-green text-right">
                 {t.type === 'on_demand' ? formatMoney(t.amount, cur) : '——'}
               </span>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{
-                  color: badge.color, border: `1px solid ${badge.color}`,
-                  padding: '1px 5px', fontSize: 12, letterSpacing: '0.06em',
-                }}>
-                  {badge.label}
-                </span>
+              <div className="text-right">
+                <span className="font-pixel text-[12px] tracking-[0.06em] px-1.5 border"
+                      style={{ color: badge.color, borderColor: badge.color }}>{badge.label}</span>
               </div>
             </div>
           );
         })
       )}
-
-      <div style={{
-        display: 'flex', justifyContent: 'space-between',
-        padding: '8px 14px',
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        fontSize: 12, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.06em',
-      }}>
+      <div className="flex justify-between px-3.5 py-2 border-t border-white/5 font-pixel text-[12px] text-white/25 tracking-[0.06em]">
         <span>{DASHBOARD.taskCount(tasks.length)}</span>
         <span>{DASHBOARD.doneCount(doneCount)}</span>
       </div>
@@ -276,7 +217,7 @@ async function RecentTasks({ month }: { month: string }) {
   );
 }
 
-/* ── Per-client revenue ─────────────────────────────────────────────── */
+/* ── Client revenue ───────────────────────────────────────────── */
 async function ClientRevenue({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const settings = await getSettings();
@@ -290,65 +231,49 @@ async function ClientRevenue({ month }: { month: string }) {
 
   const clients = (clientRows ?? []) as Client[];
   const tasks   = (taskRows   ?? []) as unknown as Pick<TaskWithClient, 'client_id' | 'amount' | 'client'>[];
-
   const byClient = new Map<string, { name: string; amount: number }>();
   for (const t of tasks) {
-    const key  = t.client_id ?? '__none__';
+    const key = t.client_id ?? '__none__';
     const name = (t.client as { name: string } | null)?.name ?? '(unassigned)';
-    const e    = byClient.get(key) ?? { name, amount: 0 };
-    e.amount  += Number(t.amount);
+    const e = byClient.get(key) ?? { name, amount: 0 };
+    e.amount += Number(t.amount);
     byClient.set(key, e);
   }
   const clientRevenue = [...byClient.values()].sort((a, b) => b.amount - a.amount);
   const retainerTotal = clients.filter(c => c.is_maintain_active).reduce((s, c) => s + Number(c.monthly_retainer), 0);
 
   return (
-    <div style={{
-      border: '1px solid rgba(139,92,246,0.2)',
-      background: 'rgba(0,0,0,0.25)',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-      height: '100%',
-      padding: '14px',
-    }}>
-      <div style={{
-        color: '#22D3EE', fontSize: 13, letterSpacing: '0.12em',
-        marginBottom: 14, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 8,
-      }}>
+    <div className="border border-px-purple/20 bg-black/25 shadow-hard h-full p-4">
+      <div className="font-pixel text-[13px] text-px-cyan tracking-[0.12em] mb-3.5 border-b border-white/5 pb-2">
         // {DASHBOARD.revenueByClient.toUpperCase()}
       </div>
-
       {clientRevenue.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 14, padding: '24px 0', letterSpacing: '0.08em' }}>
-          {DASHBOARD.noRevenue}
-        </div>
+        <div className="text-center font-pixel text-[14px] text-white/20 py-6 tracking-[0.08em]">{DASHBOARD.noRevenue}</div>
       ) : (
-        <Stack gap={6}>
+        <div className="space-y-2">
           {clientRevenue.map(c => (
-            <Group key={c.name} justify="space-between">
-              <Text size="sm" truncate style={{ flex: 1, color: 'rgba(255,255,255,0.7)' }}>{c.name}</Text>
-              <Text size="xs" style={{ color: '#22c55e', fontFamily: 'inherit' }}>{formatMoney(c.amount, cur)}</Text>
-            </Group>
+            <div key={c.name} className="flex justify-between items-center">
+              <span className="font-pixel text-[15px] text-white/70 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{c.name}</span>
+              <span className="font-pixel text-[14px] text-px-green ml-2">{formatMoney(c.amount, cur)}</span>
+            </div>
           ))}
-        </Stack>
+        </div>
       )}
-
       {retainerTotal > 0 && (
-        <Group justify="space-between" mt="md" pt="xs" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <Text size="xs" c="dimmed">Retainer (maintain)</Text>
-          <Text size="xs" style={{ color: '#A78BFA', fontFamily: 'inherit' }}>{formatMoney(retainerTotal, cur)}</Text>
-        </Group>
+        <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/[0.06]">
+          <span className="font-pixel text-[13px] text-white/30">Retainer (maintain)</span>
+          <span className="font-pixel text-[14px] text-px-purple">{formatMoney(retainerTotal, cur)}</span>
+        </div>
       )}
     </div>
   );
 }
 
-/* ── Boss Stage ─────────────────────────────────────────────────────── */
+/* ── Boss stage ───────────────────────────────────────────────── */
 async function BossStage({ month }: { month: string }) {
   const { start, end } = monthRange(month);
   const supabase = await createClient();
-  const { data } = await supabase
-    .from('tasks').select('status')
-    .gte('task_date', start).lte('task_date', end);
+  const { data } = await supabase.from('tasks').select('status').gte('task_date', start).lte('task_date', end);
 
   const tasks   = (data ?? []) as { status: string }[];
   const total   = tasks.length;
@@ -363,73 +288,38 @@ async function BossStage({ month }: { month: string }) {
   const hpColor    = cleared ? '#4ADE80' : hpPct < 30 ? '#FCD34D' : '#F87171';
 
   return (
-    <div style={{
-      border: `1px solid ${cleared ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.2)'}`,
-      background: 'rgba(0,0,0,0.3)',
-      padding: '16px 20px',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Background glow */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    <div className="relative overflow-hidden border p-5"
+         style={{ borderColor: cleared ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.2)', background: 'rgba(0,0,0,0.3)' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{
         background: cleared
           ? 'radial-gradient(ellipse at center, rgba(74,222,128,0.04) 0%, transparent 70%)'
-          : 'radial-gradient(ellipse at center, rgba(248,113,113,0.04) 0%, transparent 70%)',
-        pointerEvents: 'none',
+          : 'radial-gradient(ellipse at center, rgba(248,113,113,0.04) 0%, transparent 70%)'
       }} />
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, position: 'relative' }}>
-        {/* Boss sprite */}
-        <div style={{ textAlign: 'center', flexShrink: 0 }}>
-          <div style={{ fontSize: 52, lineHeight: 1, filter: cleared ? 'grayscale(1) opacity(0.5)' : 'none' }}>
-            {bossSprite}
-          </div>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.08em', marginTop: 4 }}>
-            {cleared ? '[ DEFEATED ]' : '[ ACTIVE ]'}
-          </div>
+      <div className="relative flex items-center gap-5">
+        <div className="text-center flex-shrink-0">
+          <div className="text-[52px] leading-none" style={{ filter: cleared ? 'grayscale(1) opacity(0.5)' : 'none' }}>{bossSprite}</div>
+          <div className="font-pixel text-[10px] text-white/30 tracking-[0.08em] mt-1">{cleared ? '[ DEFEATED ]' : '[ ACTIVE ]'}</div>
         </div>
-
-        {/* HP + info */}
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.4)' }}>
-              MONTHLY_BOSS
-            </Text>
-            <Text style={{ fontSize: 11, letterSpacing: '0.1em', color: hpColor }}>
-              HP: {total - done}/{total}
-            </Text>
+        <div className="flex-1">
+          <div className="flex justify-between mb-1.5">
+            <span className="font-pixel text-[11px] tracking-widest2 text-white/40">MONTHLY_BOSS</span>
+            <span className="font-pixel text-[11px] tracking-[0.1em]" style={{ color: hpColor }}>HP: {total - done}/{total}</span>
           </div>
-
-          {/* HP bar */}
-          <div style={{ marginBottom: 8 }}>
+          <div className="mb-2">
             {cleared ? (
-              <Text style={{ color: '#4ADE80', fontSize: 22, letterSpacing: '0.06em', textShadow: '0 0 16px rgba(74,222,128,0.6)' }}>
-                ★ STAGE CLEAR ★
-              </Text>
+              <span className="font-pixel text-[22px] tracking-[0.06em]" style={{ color: '#4ADE80', textShadow: '0 0 16px rgba(74,222,128,0.6)' }}>★ STAGE CLEAR ★</span>
             ) : (
               <div>
-                <span style={{ color: hpColor, letterSpacing: 1, fontSize: 16, fontFamily: 'inherit' }}>
-                  {'█'.repeat(hpFill)}
-                </span>
-                <span style={{ color: 'rgba(255,255,255,0.1)', letterSpacing: 1, fontSize: 16, fontFamily: 'inherit' }}>
-                  {'░'.repeat(hpEmpty)}
-                </span>
-                <span style={{ color: hpColor, marginLeft: 8, fontSize: 14 }}>{hpPct}%</span>
+                <span style={{ color: hpColor, letterSpacing: 1, fontSize: 16, fontFamily: 'var(--font-px)' }}>{'█'.repeat(hpFill)}</span>
+                <span style={{ color: 'rgba(255,255,255,0.1)', letterSpacing: 1, fontSize: 16, fontFamily: 'var(--font-px)' }}>{'░'.repeat(hpEmpty)}</span>
+                <span style={{ color: hpColor, marginLeft: 8, fontSize: 14, fontFamily: 'var(--font-px)' }}>{hpPct}%</span>
               </div>
             )}
           </div>
-
-          {/* Stats row */}
-          <div style={{ display: 'flex', gap: 20, fontSize: 13 }}>
-            <span style={{ color: '#4ADE80' }}>✓ SLAIN: {done}</span>
-            <span style={{ color: '#FCD34D' }}>⚔ IN_COMBAT: {doing}</span>
-            <span style={{ color: 'rgba(255,255,255,0.35)' }}>○ REMAINING: {todo}</span>
-            {!cleared && total > 0 && (
-              <span style={{ color: 'rgba(255,255,255,0.2)', marginLeft: 'auto' }}>
-                {'// DEFEAT ALL TO CLEAR STAGE'}
-              </span>
-            )}
+          <div className="flex gap-5 font-pixel text-[13px]">
+            <span className="text-px-green">✓ SLAIN: {done}</span>
+            <span className="text-px-yellow">⚔ IN_COMBAT: {doing}</span>
+            <span className="text-white/35">○ REMAINING: {todo}</span>
           </div>
         </div>
       </div>

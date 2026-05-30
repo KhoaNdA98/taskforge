@@ -1,146 +1,126 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from '@mantine/form';
-import { TextInput, Select, Textarea, Button, Group, Collapse, NumberInput } from '@mantine/core';
-import { DateInput } from '@mantine/dates';
-import { notifications } from '@mantine/notifications';
-import dayjs from 'dayjs';
+import { useToast } from '@/components/ui/toast';
 import { TASK } from '@/lib/strings';
-import { type Client, type TaskWithClient, type TaskType } from '@/lib/types';
+import { type Client, type TaskWithClient } from '@/lib/types';
 import { saveTask } from './actions';
 
-export function TasksForm({
-  task,
-  clients,
-  onDone,
-}: {
-  task: TaskWithClient | null;
-  clients: Client[];
-  onDone: () => void;
+export function TasksForm({ task, clients, onDone }: {
+  task: TaskWithClient | null; clients: Client[]; onDone: () => void;
 }) {
-  const [pending, setPending] = useState(false);
+  const [pending,  setPending]  = useState(false);
+  const [taskType, setTaskType] = useState(task?.type ?? 'on_demand');
+  const toast = useToast();
 
-  const form = useForm({
-    initialValues: {
-      name:       task?.name ?? '',
-      type:       (task?.type ?? 'on_demand') as TaskType,
-      task_date:  task?.task_date ? new Date(task.task_date) : new Date(),
-      client_id:  task?.client_id ?? '',
-      status:     task?.status ?? 'todo',
-      hours:      task?.hours != null ? Number(task.hours) : (null as number | null),
-      note:       task?.note ?? '',
-    },
-    validate: {
-      name: (v) => (v.trim() ? null : TASK.fields.name + ' is required'),
-    },
-  });
-
-  const isOnDemand = form.values.type === 'on_demand';
-
-  const handleSubmit = form.onSubmit(async (values) => {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setPending(true);
-    const fd = new FormData();
+    const fd = new FormData(e.currentTarget);
     if (task) fd.set('id', task.id);
-    fd.set('name',      values.name.trim());
-    fd.set('type',      values.type);
-    fd.set('task_date', dayjs(values.task_date).format('YYYY-MM-DD'));
-    fd.set('client_id', values.client_id);
-    fd.set('status',    values.status);
-    if (values.type === 'on_demand' && values.hours != null) {
-      fd.set('hours', String(values.hours));
-    }
-    fd.set('note', values.note);
-
     const res = await saveTask({}, fd);
     setPending(false);
     if (res.error) {
-      notifications.show({ color: 'red', message: res.error });
+      toast.error(res.error);
     } else {
-      notifications.show({ message: task ? 'Task updated.' : 'Task added.' });
+      toast.success(task ? '// Quest updated.' : '// New quest added.');
       onDone();
     }
-  });
+  }
 
-  const clientOptions = [
-    { value: '', label: TASK.fields.unassigned },
-    ...clients.map(c => ({ value: c.id, label: c.name })),
-  ];
-
-  const statusOptions = [
-    { value: 'todo',  label: TASK.status.todo  },
-    { value: 'doing', label: TASK.status.doing },
-    { value: 'done',  label: TASK.status.done  },
-  ];
+  const today = new Date().toISOString().slice(0, 10);
+  const defaultDate = task?.task_date ? task.task_date.slice(0, 10) : today;
 
   return (
-    <form onSubmit={handleSubmit}>
-      <TextInput
-        label={TASK.fields.name}
-        placeholder={TASK.fields.namePlaceholder}
-        required
-        autoFocus
-        mb="sm"
-        {...form.getInputProps('name')}
-      />
-
-      <Group grow mb="sm">
-        <Select
-          label={TASK.fields.type}
-          data={[
-            { value: 'on_demand', label: TASK.type.on_demand },
-            { value: 'maintain',  label: TASK.type.maintain  },
-          ]}
-          {...form.getInputProps('type')}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-1">
+      {/* Task name */}
+      <div className="px-field">
+        <label className="px-label" htmlFor="tf-name">{TASK.fields.name}</label>
+        <input
+          id="tf-name" name="name" required autoFocus
+          defaultValue={task?.name ?? ''}
+          placeholder={TASK.fields.namePlaceholder}
+          className="px-input"
         />
-        <DateInput
-          label={TASK.fields.date}
-          valueFormat="YYYY-MM-DD"
-          required
-          {...form.getInputProps('task_date')}
-        />
-      </Group>
+      </div>
 
-      <Group grow mb="sm">
-        <Select
-          label={TASK.fields.client}
-          data={clientOptions}
-          clearable
-          {...form.getInputProps('client_id')}
-        />
-        <Select
-          label={TASK.fields.status}
-          data={statusOptions}
-          {...form.getInputProps('status')}
-        />
-      </Group>
+      {/* Type + Date */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="px-field">
+          <label className="px-label" htmlFor="tf-type">{TASK.fields.type}</label>
+          <select
+            id="tf-type" name="type"
+            defaultValue={task?.type ?? 'on_demand'}
+            onChange={e => setTaskType(e.target.value as 'on_demand' | 'maintain')}
 
-      <Collapse expanded={isOnDemand} transitionDuration={150}>
-        <NumberInput
-          label={TASK.fields.hours}
-          description={TASK.fields.hoursHint}
-          placeholder={TASK.fields.hoursPlaceholder}
-          min={0}
-          step={0.25}
-          decimalScale={2}
-          mb="sm"
-          {...form.getInputProps('hours')}
+            className="px-input"
+          >
+            <option value="on_demand">{TASK.type.on_demand}</option>
+            <option value="maintain">{TASK.type.maintain}</option>
+          </select>
+        </div>
+        <div className="px-field">
+          <label className="px-label" htmlFor="tf-date">{TASK.fields.date}</label>
+          <input
+            id="tf-date" name="task_date" type="date" required
+            defaultValue={defaultDate}
+            className="px-input"
+          />
+        </div>
+      </div>
+
+      {/* Client + Status */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="px-field">
+          <label className="px-label" htmlFor="tf-client">{TASK.fields.client}</label>
+          <select id="tf-client" name="client_id" defaultValue={task?.client_id ?? ''} className="px-input">
+            <option value="">{TASK.fields.unassigned}</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div className="px-field">
+          <label className="px-label" htmlFor="tf-status">{TASK.fields.status}</label>
+          <select id="tf-status" name="status" defaultValue={task?.status ?? 'todo'} className="px-input">
+            <option value="todo">{TASK.status.todo}</option>
+            <option value="doing">{TASK.status.doing}</option>
+            <option value="done">{TASK.status.done}</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Hours — only for on_demand */}
+      {taskType === 'on_demand' && (
+        <div className="px-field">
+          <label className="px-label" htmlFor="tf-hours">{TASK.fields.hours}</label>
+          <input
+            id="tf-hours" name="hours" type="number" min="0" step="0.25"
+            defaultValue={task?.hours ?? ''}
+            placeholder={TASK.fields.hoursPlaceholder}
+            className="px-input"
+          />
+          <span className="font-pixel text-[12px] text-white/25 tracking-[0.04em]">
+            {TASK.fields.hoursHint}
+          </span>
+        </div>
+      )}
+
+      {/* Note */}
+      <div className="px-field">
+        <label className="px-label" htmlFor="tf-note">{TASK.fields.note}</label>
+        <textarea
+          id="tf-note" name="note" rows={2}
+          defaultValue={task?.note ?? ''}
+          className="px-input resize-none"
         />
-      </Collapse>
+      </div>
 
-      <Textarea
-        label={TASK.fields.note}
-        mb="md"
-        autosize
-        minRows={2}
-        {...form.getInputProps('note')}
-      />
-
-      <Group justify="flex-end">
-        <Button type="submit" loading={pending}>
-          {TASK.saveTask}
-        </Button>
-      </Group>
+      {/* Actions */}
+      <div className="flex justify-end gap-2 mt-2">
+        <button type="button" className="px-btn px-btn-ghost" onClick={onDone}>CANCEL</button>
+        <button type="submit" disabled={pending} className="px-btn px-btn-primary">
+          {pending ? 'SAVING...' : TASK.saveTask.toUpperCase()}
+        </button>
+      </div>
     </form>
   );
 }

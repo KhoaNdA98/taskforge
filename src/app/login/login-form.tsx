@@ -10,108 +10,49 @@ export function LoginForm() {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
   return (
-    <form action={formAction}>
-      {/* Email */}
+    <form action={formAction} className="flex flex-col gap-1">
       <div className="px-field">
-        <label htmlFor="tf-email">{AUTH.email.toUpperCase()}</label>
-        <input
-          id="tf-email"
-          name="email"
-          type="email"
-          placeholder={AUTH.emailPlaceholder}
-          autoComplete="email"
-          required
-        />
+        <label className="px-label" htmlFor="lf-email">{AUTH.email}</label>
+        <input id="lf-email" name="email" type="email" required
+               placeholder={AUTH.emailPlaceholder} autoComplete="email"
+               className="px-input" />
+      </div>
+      <div className="px-field mb-4">
+        <label className="px-label" htmlFor="lf-password">{AUTH.password}</label>
+        <input id="lf-password" name="password" type="password" required
+               placeholder="••••••••"
+               autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+               className="px-input" />
       </div>
 
-      {/* Password */}
-      <div className="px-field" style={{ marginBottom: 18 }}>
-        <label htmlFor="tf-password">{AUTH.password.toUpperCase()}</label>
-        <input
-          id="tf-password"
-          name="password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-          required
-        />
-      </div>
-
-      {/* Error/success messages */}
       {state.error && (
-        <div style={{
-          border: '1px solid rgba(239,68,68,0.5)',
-          background: 'rgba(239,68,68,0.08)',
-          color: '#f87171',
-          padding: '8px 12px',
-          marginBottom: 12,
-          fontFamily: 'var(--font-pixel), VT323, monospace',
-          fontSize: 15,
-          letterSpacing: '0.04em',
-        }}>
+        <div className="border border-px-red/50 bg-px-red/8 text-px-red font-pixel text-[15px] tracking-[0.04em] px-3 py-2 mb-3">
           ⚠ {state.error}
         </div>
       )}
       {state.message && (
-        <div style={{
-          border: '1px solid rgba(34,197,94,0.4)',
-          background: 'rgba(34,197,94,0.07)',
-          color: '#4ade80',
-          padding: '8px 12px',
-          marginBottom: 12,
-          fontFamily: 'var(--font-pixel), VT323, monospace',
-          fontSize: 15,
-          letterSpacing: '0.04em',
-        }}>
+        <div className="border border-px-green/40 bg-px-green/7 text-px-green font-pixel text-[15px] tracking-[0.04em] px-3 py-2 mb-3">
           ✓ {state.message}
         </div>
       )}
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={pending}
-        className="px-btn px-btn--primary"
-        style={{ width: '100%', fontSize: 18, padding: '10px 0', marginBottom: 14 }}
-      >
+      <button type="submit" disabled={pending}
+              className="px-btn px-btn-primary w-full text-[18px] py-2.5 mb-4 justify-center">
         {pending ? '[ LOADING... ]' : mode === 'signin' ? '[ ENTER WORLD ]' : '[ CREATE ACCOUNT ]'}
       </button>
 
-      {/* Mode switch */}
-      <div style={{
-        textAlign: 'center',
-        fontFamily: 'var(--font-pixel), VT323, monospace',
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.3)',
-        letterSpacing: '0.04em',
-      }}>
+      <div className="text-center font-pixel text-[14px] text-white/30 tracking-[0.04em]">
         {mode === 'signin' ? (
-          <>
-            No account?{' '}
-            <button
-              type="button"
-              onClick={() => setMode('signup')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#a855f7', fontFamily: 'inherit', fontSize: 'inherit',
-                padding: 0, letterSpacing: 'inherit',
-              }}
-            >
+          <>No account?{' '}
+            <button type="button" onClick={() => setMode('signup')}
+                    className="bg-none border-none cursor-pointer text-px-purple font-pixel text-[14px] p-0">
               SIGN UP →
             </button>
           </>
         ) : (
-          <>
-            Have account?{' '}
-            <button
-              type="button"
-              onClick={() => setMode('signin')}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer',
-                color: '#a855f7', fontFamily: 'inherit', fontSize: 'inherit',
-                padding: 0, letterSpacing: 'inherit',
-              }}
-            >
+          <>Have account?{' '}
+            <button type="button" onClick={() => setMode('signin')}
+                    className="bg-none border-none cursor-pointer text-px-purple font-pixel text-[14px] p-0">
               SIGN IN →
             </button>
           </>

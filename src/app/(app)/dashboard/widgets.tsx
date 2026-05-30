@@ -1,69 +1,41 @@
 'use client';
 
 import Link from 'next/link';
-import { Text, Group } from '@mantine/core';
 import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
 import { formatMoney } from '@/lib/format';
 
-/* ── Pixel HP bar ──────────────────────────────────────────────────── */
 function PixelBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max === 0 ? 0 : Math.min(value / max, 1);
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{
-        flex: 1, height: 14, position: 'relative',
-        background: 'rgba(255,255,255,0.06)',
-        border: `1px solid ${color}33`,
-      }}>
-        <div style={{
-          position: 'absolute', left: 0, top: 0, bottom: 0,
-          width: `${pct * 100}%`,
-          background: color,
-          boxShadow: `0 0 8px ${color}88`,
-        }} />
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-3.5 relative border overflow-hidden"
+           style={{ background: 'rgba(255,255,255,0.06)', borderColor: color + '33' }}>
+        <div className="absolute inset-y-0 left-0 transition-[width] duration-500"
+             style={{ width: `${pct * 100}%`, background: color, boxShadow: `0 0 8px ${color}88` }} />
       </div>
-      <span style={{ color, fontSize: 12, minWidth: 34, textAlign: 'right', letterSpacing: '0.04em' }}>
-        {Math.round(pct * 100)}%
-      </span>
+      <span className="font-pixel text-[12px] min-w-[34px] text-right tracking-[0.04em]"
+            style={{ color }}>{Math.round(pct * 100)}%</span>
     </div>
   );
 }
 
-/* ── Completion (HP) widget ────────────────────────────────────────── */
 export function CompletionWidget({ todo, doing, done }: { todo: number; doing: number; done: number }) {
   const total   = todo + doing + done;
   const donePct = total === 0 ? 0 : Math.round((done / total) * 100);
-
   return (
-    <div style={{
-      background: 'rgba(0,0,0,0.35)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderLeft: '4px solid #22c55e',
-      padding: '16px 18px',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-    }}>
-      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: '#22c55e', marginBottom: 12 }}>
-        COMPLETION (HP)
-      </Text>
-
-      <div style={{ marginBottom: 10 }}>
-        <PixelBar value={done} max={total} color="#22c55e" />
-      </div>
-
-      <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: 14, marginBottom: 10 }}>
-        {donePct}% Nhiệm vụ đã xong
-      </Text>
-
-      <div style={{ display: 'flex', gap: 14, fontSize: 13 }}>
-        <span style={{ color: '#22c55e' }}>●DONE&nbsp;{done}</span>
-        <span style={{ color: '#FCD34D' }}>●WIP&nbsp;&nbsp;{doing}</span>
-        <span style={{ color: 'rgba(255,255,255,0.3)' }}>○TODO&nbsp;{todo}</span>
+    <div className="bg-black/35 border border-white/5 border-l-4 border-l-px-green p-4 shadow-hard">
+      <div className="font-pixel text-[11px] tracking-widest2 text-px-green mb-3">COMPLETION (HP)</div>
+      <div className="mb-2.5"><PixelBar value={done} max={total} color="#22c55e" /></div>
+      <div className="font-pixel text-[14px] text-white/45 mb-2.5">{donePct}% Nhiệm vụ đã xong</div>
+      <div className="flex gap-3 font-pixel text-[13px]">
+        <span className="text-px-green">●DONE&nbsp;{done}</span>
+        <span className="text-px-yellow">●WIP&nbsp;&nbsp;{doing}</span>
+        <span className="text-white/30">○TODO&nbsp;{todo}</span>
       </div>
     </div>
   );
 }
 
-/* ── Profit (XP) widget ─────────────────────────────────────────────── */
 export function DeltaWidget({ current, previous, currency }: { current: number; previous: number; currency: string }) {
   const delta  = current - previous;
   const pct    = previous === 0 ? (current > 0 ? 100 : 0) : Math.abs(Math.round((delta / previous) * 100));
@@ -71,105 +43,54 @@ export function DeltaWidget({ current, previous, currency }: { current: number; 
   const flat   = delta === 0;
   const Icon   = flat ? Minus : up ? TrendingUp : TrendingDown;
   const accent = flat ? 'rgba(255,255,255,0.4)' : up ? '#A78BFA' : '#F87171';
-
   return (
-    <div style={{
-      background: 'rgba(0,0,0,0.35)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderLeft: '4px solid #A78BFA',
-      padding: '16px 18px',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-    }}>
-      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: '#A78BFA', marginBottom: 12 }}>
-        PROFIT (XP)
-      </Text>
-
-      <Text style={{ fontSize: 26, lineHeight: 1, color: '#E8E8F0', marginBottom: 6, letterSpacing: '-0.01em' }}>
+    <div className="bg-black/35 border border-white/5 border-l-4 p-4 shadow-hard" style={{ borderLeftColor: '#A78BFA' }}>
+      <div className="font-pixel text-[11px] tracking-widest2 mb-3" style={{ color: '#A78BFA' }}>PROFIT (XP)</div>
+      <div className="font-pixel text-[26px] leading-none text-[#E8E8F0] mb-1.5">
         + {formatMoney(current, currency)}
-      </Text>
-
-      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, marginBottom: 10 }}>
-        Kinh nghiệm tích lũy tháng
-      </Text>
-
-      <Group gap="xs">
+      </div>
+      <div className="font-pixel text-[14px] text-white/35 mb-2.5">Kinh nghiệm tích lũy tháng</div>
+      <div className="flex items-center gap-2 font-pixel text-[13px]">
         <Icon size={13} style={{ color: accent }} />
-        <Text style={{ color: accent, fontSize: 13 }}>
-          {flat ? '±0%' : `${up ? '+' : '−'}${pct}%`}
-        </Text>
-        <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
-          prev: {formatMoney(previous, currency)}
-        </Text>
-      </Group>
+        <span style={{ color: accent }}>{flat ? '±0%' : `${up ? '+' : '−'}${pct}%`}</span>
+        <span className="text-white/25">prev: {formatMoney(previous, currency)}</span>
+      </div>
     </div>
   );
 }
 
-/* ── Debt (Poison) widget ─────────────────────────────────────────── */
 export function DebtWidget({ amount, currency }: { amount: number; currency: string }) {
   const accent = amount > 0 ? '#FCD34D' : '#22c55e';
-
   return (
-    <div style={{
-      background: 'rgba(0,0,0,0.35)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderLeft: `4px solid ${accent}`,
-      padding: '16px 18px',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-    }}>
-      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: accent, marginBottom: 12 }}>
-        DEBT (POISON)
-      </Text>
-
-      <Text style={{ fontSize: 26, lineHeight: 1, color: accent, marginBottom: 6, textShadow: `0 0 16px ${accent}44`, letterSpacing: '-0.01em' }}>
+    <div className="bg-black/35 border border-white/5 border-l-4 p-4 shadow-hard" style={{ borderLeftColor: accent }}>
+      <div className="font-pixel text-[11px] tracking-widest2 mb-3" style={{ color: accent }}>DEBT (POISON)</div>
+      <div className="font-pixel text-[26px] leading-none mb-1.5" style={{ color: accent, textShadow: `0 0 16px ${accent}44` }}>
         {formatMoney(amount, currency)}
-      </Text>
-
-      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14 }}>
+      </div>
+      <div className="font-pixel text-[14px] text-white/35">
         {amount > 0 ? 'Trạng thái công nợ hiện tại' : '// NO DEBT REMAINING'}
-      </Text>
+      </div>
     </div>
   );
 }
 
-/* ── Unbilled widget (legacy – kept for compatibility) ────────────── */
 export function UnbilledWidget({ tasks, month }: { tasks: { id: string; name: string }[]; month: string }) {
   const count  = tasks.length;
   const accent = count > 0 ? '#FCD34D' : '#4ADE80';
-
   return (
-    <div style={{
-      background: 'rgba(0,0,0,0.35)',
-      border: '1px solid rgba(255,255,255,0.06)',
-      borderLeft: `4px solid ${accent}`,
-      padding: '16px 18px',
-      boxShadow: '4px 4px 0px rgba(0,0,0,0.8)',
-    }}>
-      <Text style={{ fontSize: 11, letterSpacing: '0.14em', color: accent, marginBottom: 12 }}>
-        NEEDS_HOURS
-      </Text>
-
-      <Text style={{ fontSize: 44, lineHeight: 1, color: accent, marginBottom: 6, textShadow: `0 0 20px ${accent}44` }}>
-        {count}
-      </Text>
-      <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 14, marginBottom: 10 }}>
-        TASK{count !== 1 ? 'S' : ''} @ 0H
-      </Text>
-
+    <div className="bg-black/35 border border-white/5 border-l-4 p-4 shadow-hard" style={{ borderLeftColor: accent }}>
+      <div className="font-pixel text-[11px] tracking-widest2 mb-3" style={{ color: accent }}>NEEDS_HOURS</div>
+      <div className="font-pixel text-[44px] leading-none mb-1.5" style={{ color: accent, textShadow: `0 0 20px ${accent}44` }}>{count}</div>
+      <div className="font-pixel text-[14px] text-white/35 mb-2.5">TASK{count !== 1 ? 'S' : ''} @ 0H</div>
       {count === 0 ? (
-        <Text style={{ color: '#4ADE80', fontSize: 13 }}>{'// ALL HOURS LOGGED'}</Text>
+        <span className="font-pixel text-[13px] text-px-green">{'// ALL HOURS LOGGED'}</span>
       ) : (
         <div>
           {tasks.slice(0, 3).map(t => (
-            <Text key={t.id} style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {'>'} {t.name}
-            </Text>
+            <div key={t.id} className="font-pixel text-[12px] text-white/40 overflow-hidden text-ellipsis whitespace-nowrap">&gt; {t.name}</div>
           ))}
-          {count > 3 && <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 12 }}>{'+ ' + (count - 3) + ' MORE...'}</Text>}
-          <Link
-            href={`/tasks?month=${month}&type=on_demand&view=table`}
-            style={{ color: '#A78BFA', fontSize: 13, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6 }}
-          >
+          {count > 3 && <div className="font-pixel text-[12px] text-white/25">+ {count - 3} MORE...</div>}
+          <Link href={`/tasks?month=${month}`} className="font-pixel text-[13px] text-px-purple no-underline flex items-center gap-1 mt-1.5">
             LOG HOURS <ArrowRight size={11} />
           </Link>
         </div>

@@ -1,17 +1,16 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Checkbox } from '@mantine/core';
-import { modals } from '@mantine/modals';
-import { notifications } from '@mantine/notifications';
+import { useModal } from '@/components/ui/modal';
+import { useToast } from '@/components/ui/toast';
 import { deleteTask } from './actions';
 import { TasksForm } from './tasks-form';
 import { type Client, type TaskWithClient, type TaskStatus } from '@/lib/types';
 import { TASK } from '@/lib/strings';
 import { formatMoney, formatDate } from '@/lib/format';
 
-/* ── Status config ───────────────────────────────────────────────── */
+/* ── Status config ───────────────────────────────────────────── */
 const STATUS_COLOR: Record<TaskStatus, string> = {
   todo:  '#a855f7',
   doing: '#eab308',
@@ -23,180 +22,138 @@ const STATUS_LABEL: Record<TaskStatus, string> = {
   done:  'DONE',
 };
 
-/* ── Smart emoji icon based on task content ─────────────────────── */
+/* ── Quest icon from task name ───────────────────────────────── */
 function getQuestIcon(task: TaskWithClient): string {
   const n = task.name.toLowerCase();
-  if (/bug|fix|error|lỗi|crash/.test(n))                    return '🐞';
-  if (/migrat|import|export|transfer|data/.test(n))          return '📦';
-  if (/config|setting|cài|setup|install/.test(n))            return '⚙️';
-  if (/ui|design|style|css|layout|giao diện/.test(n))        return '🎨';
-  if (/api|endpoint|backend|server|database|db/.test(n))     return '🔧';
-  if (/test|review|audit|kiểm tra/.test(n))                  return '🔍';
-  if (/update|upgrade|version|refactor/.test(n))             return '⬆️';
-  if (/add|new|create|feature|tính năng|thêm/.test(n))       return '📜';
-  if (task.type === 'maintain')  return '⚔️';
+  if (/bug|fix|error|lỗi|crash/.test(n))               return '🐞';
+  if (/migrat|import|export|transfer|data/.test(n))     return '📦';
+  if (/config|setting|cài|setup|install/.test(n))       return '⚙️';
+  if (/ui|design|style|css|layout|giao diện/.test(n))   return '🎨';
+  if (/api|endpoint|backend|server|database|db/.test(n))return '🔧';
+  if (/test|review|audit|kiểm tra/.test(n))             return '🔍';
+  if (/update|upgrade|version|refactor/.test(n))        return '⬆️';
+  if (/add|new|create|feature|tính năng|thêm/.test(n))  return '📜';
+  if (task.type === 'maintain') return '⚔️';
   return '💰';
 }
 
-/* ── Quest card ──────────────────────────────────────────────────── */
-function QuestCard({
-  task, clients, currency, selected, onToggleSelect, onEdit, onDelete,
-}: {
-  task:           TaskWithClient;
-  clients:        Client[];
-  currency:       string;
-  selected:       boolean;
-  onToggleSelect: () => void;
-  onEdit:         () => void;
-  onDelete:       () => void;
+/* ── QuestCard ───────────────────────────────────────────────── */
+function QuestCard({ task, clients, currency, onEdit, onDelete }: {
+  task: TaskWithClient; clients: Client[]; currency: string;
+  onEdit: () => void; onDelete: () => void;
 }) {
   const sc         = STATUS_COLOR[task.status];
   const clientName = clients.find(c => c.id === task.client_id)?.name ?? null;
   const isOD       = task.type === 'on_demand';
   const icon       = getQuestIcon(task);
 
+  const borderClass = {
+    todo:  'border-px-purple/50 quest-todo',
+    doing: 'border-px-yellow/50 quest-doing',
+    done:  'border-px-green/40  quest-done',
+  }[task.status];
+
   return (
     <div
-      className={`tf-quest-card tf-quest-card--${task.status}`}
-      style={{
-        background: '#13131c',
-        border: `2px solid ${selected ? '#a855f7' : '#2d2d3d'}`,
-        padding: '14px 16px',
-        position: 'relative',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 10,
-        cursor: 'pointer',
-        boxShadow: selected
-          ? `4px 4px 0px rgba(0,0,0,0.6), 0 0 0 1px #a855f7`
-          : `4px 4px 0px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.04)`,
-      }}
+      className={`relative flex flex-col gap-3 p-4 bg-px-card border-2 cursor-pointer
+                  shadow-hard transition-all duration-150 group ${borderClass}`}
       onClick={onEdit}
     >
-      {/* Selection checkbox (top-left) */}
-      <div
-        style={{ position: 'absolute', top: 6, left: 6, zIndex: 2 }}
-        onClick={e => { e.stopPropagation(); onToggleSelect(); }}
-      >
-        <Checkbox checked={selected} onChange={onToggleSelect} size="xs" aria-label="Select" />
-      </div>
-
-      {/* Delete button (top-right, visible on hover) */}
+      {/* Delete btn — top right, visible on hover */}
       <button
-        className="tf-quest-card-actions"
         onClick={e => { e.stopPropagation(); onDelete(); }}
-        style={{
-          position: 'absolute', top: 4, right: 6, zIndex: 2,
-          background: 'none', border: 'none', cursor: 'pointer',
-          color: 'rgba(248,113,113,0.7)', fontSize: 16, lineHeight: 1,
-          padding: '2px 4px', fontFamily: 'inherit',
-        }}
+        className="absolute top-1.5 right-2 opacity-0 group-hover:opacity-100 transition-opacity
+                   bg-none border-none cursor-pointer text-px-red/70 hover:text-px-red
+                   font-pixel text-[18px] leading-none px-1 z-10"
         aria-label="Delete"
       >
         ×
       </button>
 
-      {/* Header: status + client */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingLeft: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
-          <div style={{
-            width: 8, height: 8, flexShrink: 0,
-            background: sc,
-            boxShadow: `0 0 6px ${sc}`,
-          }} />
-          <span style={{ color: 'rgba(255,255,255,0.45)', letterSpacing: '0.06em' }}>
-            {STATUS_LABEL[task.status]}
-          </span>
+      {/* Top row: icon + status badge */}
+      <div className="flex items-center justify-between">
+        <span className="text-[28px] leading-none" role="img" aria-hidden
+              style={{ filter: 'drop-shadow(2px 2px 0 rgba(0,0,0,0.8))' }}>
+          {icon}
+        </span>
+        <span className="font-pixel text-[13px] tracking-[0.06em] px-2 border"
+              style={{ color: sc, borderColor: sc + '80' }}>
+          [ {STATUS_LABEL[task.status]} ]
+        </span>
+      </div>
+
+      {/* Task name */}
+      <div className={`font-pixel text-[17px] leading-snug flex-1
+        ${task.status === 'done' ? 'text-white/50' : 'text-[#e8e8f0]'}`}>
+        {task.name}
+      </div>
+
+      {/* Bottom: client + reward */}
+      <div className="grid grid-cols-2 gap-x-2 mt-auto">
+        <div>
+          <div className="font-pixel text-[11px] text-px-cyan tracking-[0.1em] mb-0.5">
+            CLIENT
+          </div>
+          <div className="font-pixel text-[14px] text-white/80 overflow-hidden text-ellipsis whitespace-nowrap">
+            {clientName ?? '—'}
+          </div>
         </div>
-        {clientName && (
-          <div style={{
-            background: 'rgba(255,255,255,0.07)',
-            padding: '1px 8px',
-            fontSize: 12,
-            color: '#94A3B8',
-            letterSpacing: '0.04em',
-            maxWidth: 90,
-            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-          }}>
-            {clientName}
+        {isOD && (
+          <div className="text-right">
+            <div className="font-pixel text-[11px] text-px-cyan tracking-[0.1em] mb-0.5">
+              REWARD
+            </div>
+            <div className="font-pixel text-[14px] text-px-green"
+                 style={{ textShadow: '0 0 8px rgba(34,197,94,0.5)' }}>
+              +{formatMoney(task.amount, currency)} XP
+            </div>
           </div>
         )}
       </div>
 
-      {/* Task name */}
-      <div style={{
-        fontSize: 17,
-        lineHeight: 1.4,
-        color: task.status === 'done' ? 'rgba(255,255,255,0.65)' : '#e2e8f0',
-        wordBreak: 'break-word',
-        flex: 1,
-      }}>
-        {task.name}
-      </div>
-
-      {/* Footer: date + icon + reward */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>
-            {formatDate(task.task_date).slice(0, 5)}
-          </span>
-          {isOD && task.amount > 0 && (
-            <span style={{ fontSize: 13, color: '#22c55e', letterSpacing: '0.02em' }}>
-              {formatMoney(task.amount, currency)}
-            </span>
-          )}
-        </div>
-        <span style={{
-          fontSize: 28,
-          filter: 'drop-shadow(2px 2px 0px rgba(0,0,0,0.8))',
-          userSelect: 'none',
-        }}>
-          {icon}
-        </span>
+      {/* Date */}
+      <div className="font-pixel text-[12px] text-white/25 tracking-[0.04em]">
+        DATE: {formatDate(task.task_date).slice(0, 10)}
       </div>
     </div>
   );
 }
 
-/* ── Main ────────────────────────────────────────────────────────── */
-export function TasksInventory({
-  tasks, clients, currency, selectedIds, onToggleSelect,
-}: {
-  tasks:          TaskWithClient[];
-  clients:        Client[];
-  currency:       string;
-  selectedIds:    Set<string>;
-  onToggleSelect: (id: string) => void;
+/* ── TasksInventory ──────────────────────────────────────────── */
+export function TasksInventory({ tasks, clients, currency }: {
+  tasks: TaskWithClient[]; clients: Client[]; currency: string;
 }) {
   const router = useRouter();
+  const { open } = useModal();
+  const toast  = useToast();
 
   const openEdit = useCallback((task: TaskWithClient) => {
-    modals.open({
+    open({
       title: TASK.editTask,
-      children: (
+      content: (
         <TasksForm
           task={task}
           clients={clients}
-          onDone={() => { modals.closeAll(); router.refresh(); }}
+          onDone={() => { open({ title: '', content: null }); router.refresh(); }}
         />
       ),
-      size: 'md',
     });
-  }, [clients, router]);
+  }, [clients, open, router]);
 
-  const onDelete = useCallback((task: TaskWithClient) => {
-    modals.openConfirmModal({
+  const openDelete = useCallback((task: TaskWithClient) => {
+    open({
       title: TASK.deleteConfirm(task.name),
-      children: <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)' }}>{TASK.deleteConfirmDetail}</div>,
-      labels: { confirm: 'DELETE', cancel: 'CANCEL' },
-      confirmProps: { color: 'red' },
+      content: <p className="font-pixel text-[16px] text-white/50">{TASK.deleteConfirmDetail}</p>,
       onConfirm: async () => {
         await deleteTask(task.id);
-        notifications.show({ message: '// Quest removed from board.' });
+        toast.success('// Quest removed from board.');
         router.refresh();
       },
+      confirmLabel: '[ DELETE ]',
+      cancelLabel:  '[ CANCEL ]',
+      danger: true,
     });
-  }, [router]);
+  }, [open, toast, router]);
 
   const done  = tasks.filter(t => t.status === 'done').length;
   const doing = tasks.filter(t => t.status === 'doing').length;
@@ -205,44 +162,30 @@ export function TasksInventory({
   return (
     <div>
       {/* Board header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <div style={{ fontSize: 22, color: '#a855f7', letterSpacing: '0.08em', textShadow: '0 0 10px rgba(168,85,247,0.5)' }}>
-          ⚔️ QUEST_BOARD
-        </div>
-        <div style={{ display: 'flex', gap: 16, fontSize: 14 }}>
-          <span style={{ color: '#22c55e' }}>●DONE&nbsp;{done}</span>
-          <span style={{ color: '#eab308' }}>●WIP&nbsp;{doing}</span>
-          <span style={{ color: 'rgba(168,85,247,0.8)' }}>●TODO&nbsp;{todo}</span>
+      <div className="flex items-center justify-between mb-5">
+        <div className="px-section-title">⚔️ QUEST_BOARD</div>
+        <div className="flex gap-5 font-pixel text-[14px]">
+          <span className="text-px-green">●DONE&nbsp;{done}</span>
+          <span className="text-px-yellow">●WIP&nbsp;{doing}</span>
+          <span className="text-px-purple/80">●TODO&nbsp;{todo}</span>
         </div>
       </div>
 
       {tasks.length === 0 ? (
-        <div style={{
-          border: '2px dashed rgba(168,85,247,0.2)',
-          padding: '48px',
-          textAlign: 'center',
-          color: 'rgba(255,255,255,0.2)',
-          fontSize: 18,
-          letterSpacing: '0.08em',
-        }}>
+        <div className="border-2 border-dashed border-px-purple/20 p-16 text-center
+                        font-pixel text-[18px] text-white/20 tracking-[0.08em]">
           {'// NO ACTIVE QUESTS'}
         </div>
       ) : (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-          gap: '16px',
-        }}>
+        <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
           {tasks.map(task => (
             <QuestCard
               key={task.id}
               task={task}
               clients={clients}
               currency={currency}
-              selected={selectedIds.has(task.id)}
-              onToggleSelect={() => onToggleSelect(task.id)}
               onEdit={() => openEdit(task)}
-              onDelete={() => onDelete(task)}
+              onDelete={() => openDelete(task)}
             />
           ))}
         </div>

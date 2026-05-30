@@ -1,9 +1,7 @@
 import { Suspense } from 'react';
-import { Stack, Title, Text, Skeleton } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSettings } from '@/lib/dal';
 import { currentMonth, monthRange } from '@/lib/format';
-import { TASK } from '@/lib/strings';
 import type { Client, TaskWithClient } from '@/lib/types';
 import { TasksView } from './tasks-view';
 
@@ -12,15 +10,22 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
 export default function TasksPage({ searchParams }: { searchParams: Promise<SP> }) {
   return (
-    <Stack gap="lg">
-      <div>
-        <Title order={2} style={{ letterSpacing: '-0.02em' }}>{TASK.title}</Title>
-        <Text size="sm" c="dimmed">{TASK.subtitle}</Text>
+    <Suspense fallback={<TasksSkeleton />}>
+      <TasksLoader searchParams={searchParams} />
+    </Suspense>
+  );
+}
+
+function TasksSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="h-10 bg-px-card border border-px-border animate-pulse" />
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-48 bg-px-card border border-px-border animate-pulse" />
+        ))}
       </div>
-      <Suspense fallback={<Skeleton h={400} radius="lg" />}>
-        <TasksLoader searchParams={searchParams} />
-      </Suspense>
-    </Stack>
+    </div>
   );
 }
 
@@ -31,8 +36,6 @@ async function TasksLoader({ searchParams }: { searchParams: Promise<SP> }) {
   const client = one(sp.client) || 'all';
   const status = one(sp.status) || 'all';
   const q      = one(sp.q)      || '';
-  const view   = one(sp.view)   || 'table';
-  const group  = one(sp.group)  || 'status';
 
   const settings = await getSettings();
   const supabase = await createClient();
@@ -43,8 +46,7 @@ async function TasksLoader({ searchParams }: { searchParams: Promise<SP> }) {
       let query = supabase
         .from('tasks')
         .select('*, client:clients(name)')
-        .order('position', { ascending: false, nullsFirst: false })
-        .order('task_date',  { ascending: false })
+        .order('task_date', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (month) { const { start, end } = monthRange(month); query = query.gte('task_date', start).lte('task_date', end); }
@@ -53,7 +55,6 @@ async function TasksLoader({ searchParams }: { searchParams: Promise<SP> }) {
       if (client === 'none') query = query.is('client_id', null);
       else if (client !== 'all') query = query.eq('client_id', client);
       if (q) query = query.ilike('name', `%${q}%`);
-
       return query;
     })(),
   ]);
@@ -63,7 +64,7 @@ async function TasksLoader({ searchParams }: { searchParams: Promise<SP> }) {
       tasks={(taskRes.data ?? []) as TaskWithClient[]}
       clients={(clientRows ?? []) as Client[]}
       currency={settings.currency}
-      filters={{ month, type, client, status, q, view, group }}
+      filters={{ month, type, client, status, q }}
     />
   );
 }
