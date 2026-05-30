@@ -122,8 +122,8 @@ export function TasksTable({
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border bg-panel-2/60">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-border bg-panel-2/95 backdrop-blur-sm">
                 {/* Bulk checkbox */}
                 <th className="w-10 px-3 py-2.5">
                   <input
@@ -280,7 +280,7 @@ function TaskRow({
           checked={selected}
           onChange={onToggleSelect}
           onClick={e => e.stopPropagation()}
-          className="h-4 w-4 cursor-pointer accent-[var(--color-accent)] opacity-0 transition-opacity group-hover:opacity-100 data-[checked]:opacity-100"
+          className="h-4 w-4 cursor-pointer accent-[var(--color-accent)] opacity-30 transition-opacity group-hover:opacity-100 data-[checked]:opacity-100"
           data-checked={selected || undefined}
           aria-label="Select task"
         />
@@ -433,7 +433,11 @@ function QuickAddRow({
               value={name}
               onChange={e => setName(e.target.value)}
               onKeyDown={onKey}
-              onBlur={() => { if (!name.trim()) setActive(false); }}
+              onBlur={() => {
+                // Auto-submit if there's a name; cancel if empty
+                if (name.trim()) submit();
+                else setActive(false);
+              }}
               placeholder="Task name… (Enter to save, Esc to cancel)"
               disabled={pending}
               className="flex-1 rounded-lg border border-accent/50 bg-panel-2 px-2 py-1 text-sm text-fg outline-none ring-2 ring-accent/30 placeholder:text-muted"

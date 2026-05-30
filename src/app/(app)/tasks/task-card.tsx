@@ -148,10 +148,8 @@ export function SortableTaskCard({
       whileHover={isDragging ? {} : {
         y: -2,
         boxShadow: "0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.07)",
-        transition: fluid,
       }}
-      layout
-      layoutId={`card-${task.id}`}
+      transition={isDragging ? { duration: 0 } : fluid}
     >
       <TaskCardStatic
         task={task}

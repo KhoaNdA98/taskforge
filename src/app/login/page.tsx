@@ -4,7 +4,7 @@ import { Hexagon } from "lucide-react";
 import { motion } from "motion/react";
 import { LoginForm } from "./login-form";
 import { AUTH } from "@/lib/strings";
-import { gentle, staggerDelay } from "@/lib/motion";
+import { gentle } from "@/lib/motion";
 
 export default function LoginPage() {
   return (

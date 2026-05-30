@@ -45,7 +45,9 @@ export function CountUpMoney({
 
 export function CountUpHours({ hours, className }: { hours: number; className?: string }) {
   const v = useCountUp(hours, 600);
-  return <span className={className}>{formatHours(Math.round(v * 4) / 4)}</span>;
+  // During animation show whole numbers for smooth display; snap to exact value at end
+  const display = v >= hours - 0.01 ? hours : Math.round(v);
+  return <span className={className}>{formatHours(display)}</span>;
 }
 
 export function CountUpNumber({ value, className }: { value: number; className?: string }) {

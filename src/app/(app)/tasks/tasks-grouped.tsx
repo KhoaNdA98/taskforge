@@ -210,12 +210,15 @@ function GroupSection({
                       <div key={task.id} className="relative">
                         {/* Checkbox overlay */}
                         {onToggleSelect && (
-                          <label className="absolute left-2 top-2 z-10 cursor-pointer">
+                          <label
+                            className="absolute left-2 top-2 z-10 cursor-pointer"
+                            // Stop dnd-kit's PointerSensor from initiating drag on checkbox interaction
+                            onPointerDown={e => e.stopPropagation()}
+                          >
                             <input
                               type="checkbox"
                               checked={selectedIds?.has(task.id) ?? false}
                               onChange={() => onToggleSelect(task.id)}
-                              onClick={e => e.stopPropagation()}
                               className="h-4 w-4 accent-[var(--color-accent)]"
                               aria-label="Select task"
                             />
