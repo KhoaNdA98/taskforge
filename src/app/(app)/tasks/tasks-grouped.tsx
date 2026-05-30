@@ -135,6 +135,8 @@ function GroupSection({
   clients,
   currency,
   taskIds,
+  selectedIds,
+  onToggleSelect,
   onEdit,
   onDelete,
 }: {
@@ -143,6 +145,8 @@ function GroupSection({
   clients: Client[];
   currency: string;
   taskIds: string[];
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
   onEdit: (t: TaskWithClient) => void;
   onDelete: (t: TaskWithClient) => void;
 }) {
@@ -203,15 +207,30 @@ function GroupSection({
                     </p>
                   ) : (
                     group.tasks.map(task => (
-                      <SortableTaskCard
-                        key={task.id}
-                        task={task}
-                        clients={clients}
-                        currency={currency}
-                        groupBy={groupBy}
-                        onEdit={() => onEdit(task)}
-                        onDelete={() => onDelete(task)}
-                      />
+                      <div key={task.id} className="relative">
+                        {/* Checkbox overlay */}
+                        {onToggleSelect && (
+                          <label className="absolute left-2 top-2 z-10 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds?.has(task.id) ?? false}
+                              onChange={() => onToggleSelect(task.id)}
+                              onClick={e => e.stopPropagation()}
+                              className="h-4 w-4 accent-[var(--color-accent)]"
+                              aria-label="Select task"
+                            />
+                          </label>
+                        )}
+                        <SortableTaskCard
+                          task={task}
+                          clients={clients}
+                          currency={currency}
+                          groupBy={groupBy}
+                          selected={selectedIds?.has(task.id) ?? false}
+                          onEdit={() => onEdit(task)}
+                          onDelete={() => onDelete(task)}
+                        />
+                      </div>
                     ))
                   )}
                 </div>
@@ -229,16 +248,25 @@ export function TasksGrouped({
   tasks: initialTasks,
   clients,
   currency,
+  initialGroupBy = "status",
+  onGroupByChange,
+  selectedIds,
+  onToggleSelect,
 }: {
   tasks: TaskWithClient[];
   clients: Client[];
   currency: string;
+  initialGroupBy?: GroupBy;
+  onGroupByChange?: (g: GroupBy) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
 }) {
   const router      = useRouter();
   const toast       = useToast();
   const { confirm } = useConfirm();
 
-  const [groupBy,   setGroupBy]   = useState<GroupBy>("status");
+  const [groupBy, setGroupBy] = useState<GroupBy>(initialGroupBy);
+  const handleGroupByChange = (g: GroupBy) => { setGroupBy(g); onGroupByChange?.(g); };
   const [tasks,     setTasks]     = useState<TaskWithClient[]>(initialTasks);
   const [activeId,  setActiveId]  = useState<string | null>(null);
   const [editTask,  setEditTask]  = useState<TaskWithClient | null>(null);
@@ -383,7 +411,7 @@ export function TasksGrouped({
           {groupByOptions.map(({ v, label }) => (
             <button
               key={v}
-              onClick={() => setGroupBy(v)}
+              onClick={() => handleGroupByChange(v)}
               className={`relative rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
                 groupBy === v ? "text-fg" : "text-muted hover:text-fg"
               }`}
@@ -419,6 +447,8 @@ export function TasksGrouped({
               clients={clients}
               currency={currency}
               taskIds={group.tasks.map(t => t.id)}
+              selectedIds={selectedIds}
+              onToggleSelect={onToggleSelect}
               onEdit={setEditTask}
               onDelete={onDelete}
             />

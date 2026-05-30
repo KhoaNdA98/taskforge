@@ -45,10 +45,16 @@ export function TasksTable({
   tasks: initialTasks,
   clients,
   currency,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
 }: {
   tasks: TaskWithClient[];
   clients: Client[];
   currency: string;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleSelectAll: () => void;
 }) {
   const router  = useRouter();
   const toast   = useToast();
@@ -118,6 +124,16 @@ export function TasksTable({
           <table className="w-full min-w-[820px] border-collapse text-sm">
             <thead>
               <tr className="border-b border-border bg-panel-2/60">
+                {/* Bulk checkbox */}
+                <th className="w-10 px-3 py-2.5">
+                  <input
+                    type="checkbox"
+                    checked={sorted.length > 0 && sorted.every(t => selectedIds.has(t.id))}
+                    onChange={onToggleSelectAll}
+                    className="h-4 w-4 cursor-pointer accent-[var(--color-accent)]"
+                    aria-label="Select all"
+                  />
+                </th>
                 {(
                   [
                     { key: "task_date", label: "Date",   align: "left"  },
@@ -156,6 +172,8 @@ export function TasksTable({
                     task={task}
                     clients={clients}
                     currency={currency}
+                    selected={selectedIds.has(task.id)}
+                    onToggleSelect={() => onToggleSelect(task.id)}
                     onSaveField={(updates) => saveField(task, updates)}
                     onEdit={() => setEditModal(task)}
                     onDelete={() => onDelete(task)}
@@ -165,7 +183,7 @@ export function TasksTable({
 
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={8}>
+                  <td colSpan={9}>
                     <EmptyState title={TASK.empty.title} />
                   </td>
                 </tr>
@@ -213,6 +231,8 @@ function TaskRow({
   task,
   clients,
   currency,
+  selected,
+  onToggleSelect,
   onSaveField,
   onEdit,
   onDelete,
@@ -220,6 +240,8 @@ function TaskRow({
   task: TaskWithClient;
   clients: Client[];
   currency: string;
+  selected: boolean;
+  onToggleSelect: () => void;
   onSaveField: (updates: Parameters<typeof updateTaskField>[1]) => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -249,8 +271,21 @@ function TaskRow({
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 28 } }}
       exit={{ opacity: 0, y: -4, transition: { duration: 0.15 } }}
-      className="group border-b border-border-soft last:border-0 hover:bg-panel-2/40 transition-colors"
+      className={`group border-b border-border-soft last:border-0 transition-colors ${selected ? "bg-accent-soft/30 hover:bg-accent-soft/40" : "hover:bg-panel-2/40"}`}
     >
+      {/* Checkbox */}
+      <td className="w-10 px-3 py-2">
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={onToggleSelect}
+          onClick={e => e.stopPropagation()}
+          className="h-4 w-4 cursor-pointer accent-[var(--color-accent)] opacity-0 transition-opacity group-hover:opacity-100 data-[checked]:opacity-100"
+          data-checked={selected || undefined}
+          aria-label="Select task"
+        />
+      </td>
+
       {/* Date */}
       <td className="px-4 py-2">
         <EditableDate

@@ -131,3 +131,30 @@ export async function deleteTask(id: string): Promise<void> {
   revalidatePath("/tasks");
   revalidatePath("/dashboard");
 }
+
+/** Bulk update status or client for multiple tasks. */
+export async function bulkUpdateTasks(
+  ids: string[],
+  updates: { status?: TaskStatus; client_id?: string | null },
+): Promise<{ error?: string }> {
+  if (!ids.length) return {};
+  await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from("tasks").update(updates).in("id", ids);
+  if (error) return { error: error.message };
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return {};
+}
+
+/** Bulk delete multiple tasks. */
+export async function bulkDeleteTasks(ids: string[]): Promise<{ error?: string }> {
+  if (!ids.length) return {};
+  await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from("tasks").delete().in("id", ids);
+  if (error) return { error: error.message };
+  revalidatePath("/tasks");
+  revalidatePath("/dashboard");
+  return {};
+}

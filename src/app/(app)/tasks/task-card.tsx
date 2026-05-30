@@ -21,13 +21,14 @@ export const TaskCardStatic = forwardRef<
     currency: string;
     groupBy: GroupBy;
     overlay?: boolean;
+    selected?: boolean;
     onEdit?: () => void;
     onDelete?: () => void;
     style?: React.CSSProperties;
     className?: string;
   }
 >(function TaskCardStatic(
-  { task, clients, currency, groupBy, overlay, onEdit, onDelete, style, className },
+  { task, clients, currency, groupBy, overlay, selected, onEdit, onDelete, style, className },
   ref,
 ) {
   const statusTone = { todo: "muted",  doing: "amber", done: "teal"   } as const;
@@ -43,7 +44,9 @@ export const TaskCardStatic = forwardRef<
         backdrop-blur-sm transition-all duration-150 select-none
         ${overlay
           ? "rotate-[1.5deg] scale-[1.03] shadow-2xl shadow-black/40 border-accent/30 ring-1 ring-accent/20"
-          : "hover:border-border-mid hover:shadow-lg hover:shadow-black/20"}
+          : selected
+            ? "border-accent/30 bg-accent-soft/20 hover:border-accent/40"
+            : "hover:border-border-mid hover:shadow-lg hover:shadow-black/20"}
         ${className ?? ""}
       `}
     >
@@ -120,6 +123,7 @@ export function SortableTaskCard({
   clients,
   currency,
   groupBy,
+  selected,
   onEdit,
   onDelete,
 }: {
@@ -127,6 +131,7 @@ export function SortableTaskCard({
   clients: Client[];
   currency: string;
   groupBy: GroupBy;
+  selected?: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -153,6 +158,7 @@ export function SortableTaskCard({
         clients={clients}
         currency={currency}
         groupBy={groupBy}
+        selected={selected}
         onEdit={onEdit}
         onDelete={onDelete}
       />
