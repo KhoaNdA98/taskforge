@@ -1,15 +1,14 @@
-"use client";
+'use client';
 
-import { useActionState, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Button, Input, Textarea, Select, Field } from "@/components/ui";
-import { Modal, ModalField } from "@/components/modal";
-import { useToast } from "@/components/toast";
-import { toDateInput } from "@/lib/format";
-import { TASK } from "@/lib/strings";
-import { staggerItem, fadeUp } from "@/lib/motion";
-import { type Client, type TaskWithClient, type TaskType } from "@/lib/types";
-import { saveTask, type TaskActionState } from "./actions";
+import { useState } from 'react';
+import { useForm } from '@mantine/form';
+import { TextInput, Select, Textarea, Button, Group, Collapse, NumberInput } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
+import { notifications } from '@mantine/notifications';
+import dayjs from 'dayjs';
+import { TASK } from '@/lib/strings';
+import { type Client, type TaskWithClient, type TaskType } from '@/lib/types';
+import { saveTask } from './actions';
 
 export function TasksForm({
   task,
@@ -20,97 +19,128 @@ export function TasksForm({
   clients: Client[];
   onDone: () => void;
 }) {
-  const toast = useToast();
-  const [state, action, pending] = useActionState<TaskActionState, FormData>(saveTask, {});
-  const [type, setType]          = useState<TaskType>(task?.type ?? "on_demand");
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (state.ok) {
-      toast.success(task ? "Task updated." : "Task added.");
+  const form = useForm({
+    initialValues: {
+      name:       task?.name ?? '',
+      type:       (task?.type ?? 'on_demand') as TaskType,
+      task_date:  task?.task_date ? new Date(task.task_date) : new Date(),
+      client_id:  task?.client_id ?? '',
+      status:     task?.status ?? 'todo',
+      hours:      task?.hours != null ? Number(task.hours) : (null as number | null),
+      note:       task?.note ?? '',
+    },
+    validate: {
+      name: (v) => (v.trim() ? null : TASK.fields.name + ' is required'),
+    },
+  });
+
+  const isOnDemand = form.values.type === 'on_demand';
+
+  const handleSubmit = form.onSubmit(async (values) => {
+    setPending(true);
+    const fd = new FormData();
+    if (task) fd.set('id', task.id);
+    fd.set('name',      values.name.trim());
+    fd.set('type',      values.type);
+    fd.set('task_date', dayjs(values.task_date).format('YYYY-MM-DD'));
+    fd.set('client_id', values.client_id);
+    fd.set('status',    values.status);
+    if (values.type === 'on_demand' && values.hours != null) {
+      fd.set('hours', String(values.hours));
+    }
+    fd.set('note', values.note);
+
+    const res = await saveTask({}, fd);
+    setPending(false);
+    if (res.error) {
+      notifications.show({ color: 'red', message: res.error });
+    } else {
+      notifications.show({ message: task ? 'Task updated.' : 'Task added.' });
       onDone();
     }
-  }, [state.ok]); // eslint-disable-line react-hooks/exhaustive-deps
+  });
+
+  const clientOptions = [
+    { value: '', label: TASK.fields.unassigned },
+    ...clients.map(c => ({ value: c.id, label: c.name })),
+  ];
+
+  const statusOptions = [
+    { value: 'todo',  label: TASK.status.todo  },
+    { value: 'doing', label: TASK.status.doing },
+    { value: 'done',  label: TASK.status.done  },
+  ];
 
   return (
-    <form action={action} className="space-y-4">
-      {task && <input type="hidden" name="id" value={task.id} />}
+    <form onSubmit={handleSubmit}>
+      <TextInput
+        label={TASK.fields.name}
+        placeholder={TASK.fields.namePlaceholder}
+        required
+        autoFocus
+        mb="sm"
+        {...form.getInputProps('name')}
+      />
 
-      <ModalField>
-        <Field label={TASK.fields.name}>
-          <Input name="name" defaultValue={task?.name ?? ""} placeholder={TASK.fields.namePlaceholder} required autoFocus />
-        </Field>
-      </ModalField>
+      <Group grow mb="sm">
+        <Select
+          label={TASK.fields.type}
+          data={[
+            { value: 'on_demand', label: TASK.type.on_demand },
+            { value: 'maintain',  label: TASK.type.maintain  },
+          ]}
+          {...form.getInputProps('type')}
+        />
+        <DateInput
+          label={TASK.fields.date}
+          valueFormat="YYYY-MM-DD"
+          required
+          {...form.getInputProps('task_date')}
+        />
+      </Group>
 
-      <ModalField>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={TASK.fields.type}>
-            <Select name="type" value={type} onChange={e => setType(e.target.value as TaskType)}>
-              <option value="on_demand">{TASK.type.on_demand}</option>
-              <option value="maintain">{TASK.type.maintain}</option>
-            </Select>
-          </Field>
-          <Field label={TASK.fields.date}>
-            <Input name="task_date" type="date"
-              defaultValue={task ? toDateInput(task.task_date) : toDateInput()} required />
-          </Field>
-        </div>
-      </ModalField>
+      <Group grow mb="sm">
+        <Select
+          label={TASK.fields.client}
+          data={clientOptions}
+          clearable
+          {...form.getInputProps('client_id')}
+        />
+        <Select
+          label={TASK.fields.status}
+          data={statusOptions}
+          {...form.getInputProps('status')}
+        />
+      </Group>
 
-      <ModalField>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={TASK.fields.client}>
-            <Select name="client_id" defaultValue={task?.client_id ?? ""}>
-              <option value="">{TASK.fields.unassigned}</option>
-              {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </Select>
-          </Field>
-          <Field label={TASK.fields.status}>
-            <Select name="status" defaultValue={task?.status ?? "todo"}>
-              <option value="todo">{TASK.status.todo}</option>
-              <option value="doing">{TASK.status.doing}</option>
-              <option value="done">{TASK.status.done}</option>
-            </Select>
-          </Field>
-        </div>
-      </ModalField>
+      <Collapse expanded={isOnDemand} transitionDuration={150}>
+        <NumberInput
+          label={TASK.fields.hours}
+          description={TASK.fields.hoursHint}
+          placeholder={TASK.fields.hoursPlaceholder}
+          min={0}
+          step={0.25}
+          decimalScale={2}
+          mb="sm"
+          {...form.getInputProps('hours')}
+        />
+      </Collapse>
 
-      <AnimatePresence>
-        {type === "on_demand" && (
-          <motion.div
-            key="hours"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto", transition: { type: "spring", stiffness: 300, damping: 26 } }}
-            exit={{ opacity: 0, height: 0, transition: { duration: 0.15 } }}
-            className="overflow-hidden"
-          >
-            <Field label={TASK.fields.hours} hint={TASK.fields.hoursHint}>
-              <Input name="hours" type="number" min={0} step={0.25}
-                defaultValue={task?.hours ?? ""} placeholder={TASK.fields.hoursPlaceholder}
-                className="font-mono" />
-            </Field>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Textarea
+        label={TASK.fields.note}
+        mb="md"
+        autosize
+        minRows={2}
+        {...form.getInputProps('note')}
+      />
 
-      <ModalField>
-        <Field label={TASK.fields.note}>
-          <Textarea name="note" defaultValue={task?.note ?? ""} />
-        </Field>
-      </ModalField>
-
-      <AnimatePresence>
-        {state.error && (
-          <motion.p {...fadeUp} className="text-sm text-rose">{state.error}</motion.p>
-        )}
-      </AnimatePresence>
-
-      <ModalField>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="submit" variant="primary" disabled={pending}>
-            {pending ? TASK.saving : TASK.saveTask}
-          </Button>
-        </div>
-      </ModalField>
+      <Group justify="flex-end">
+        <Button type="submit" loading={pending}>
+          {TASK.saveTask}
+        </Button>
+      </Group>
     </form>
   );
 }

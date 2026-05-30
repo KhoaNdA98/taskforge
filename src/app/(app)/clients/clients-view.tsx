@@ -1,181 +1,182 @@
-"use client";
+'use client';
 
-import { useActionState, useEffect, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, Users } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { Button, Input, Textarea, Field, Card, Badge, EmptyState } from "@/components/ui";
-import { Modal, ModalField } from "@/components/modal";
-import { HoverCard } from "@/components/motion-card";
-import { useToast } from "@/components/toast";
-import { useConfirm } from "@/components/confirm-dialog";
-import { formatMoney } from "@/lib/format";
-import { CLIENT } from "@/lib/strings";
-import { fadeUp, staggerContainer, gentle, staggerItem } from "@/lib/motion";
-import type { Client } from "@/lib/types";
-import { saveClient, deleteClient, type ClientActionState } from "./actions";
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { useForm } from '@mantine/form';
+import {
+  SimpleGrid, Card, Text, Group, Badge, Button, ActionIcon,
+  TextInput, Textarea, NumberInput, Checkbox, Stack, Title,
+} from '@mantine/core';
+import { modals } from '@mantine/modals';
+import { notifications } from '@mantine/notifications';
+import { Plus, Pencil, Trash2, Users } from 'lucide-react';
+import { formatMoney } from '@/lib/format';
+import { CLIENT } from '@/lib/strings';
+import type { Client } from '@/lib/types';
+import { saveClient, deleteClient } from './actions';
 
 export function ClientsView({ clients, currency }: { clients: Client[]; currency: string }) {
-  const router  = useRouter();
-  const toast   = useToast();
-  const { confirm } = useConfirm();
-  const [open, setOpen]       = useState(false);
-  const [editing, setEditing] = useState<Client | null>(null);
-  const [nonce, setNonce]     = useState(0);
-  const [, startTransition]   = useTransition();
+  const router = useRouter();
+  const [, startTransition] = useTransition();
 
-  function openAdd()      { setEditing(null); setNonce(n => n + 1); setOpen(true); }
-  function openEdit(c: Client) { setEditing(c); setNonce(n => n + 1); setOpen(true); }
-  function onDone()       { setOpen(false); router.refresh(); }
-
-  async function onDelete(c: Client) {
-    const ok = await confirm({
-      title: CLIENT.deleteConfirm(c.name),
-      detail: "Tasks assigned to this client will be unlinked.",
-      confirmLabel: "Delete",
+  function openAdd() {
+    modals.open({
+      title: CLIENT.addClient,
+      children: <ClientForm client={null} onDone={() => { modals.closeAll(); router.refresh(); }} />,
+      size: 'sm',
     });
-    if (!ok) return;
-    startTransition(async () => {
-      await deleteClient(c.id);
-      toast.success(`Client "${c.name}" deleted.`);
-      router.refresh();
+  }
+
+  function openEdit(c: Client) {
+    modals.open({
+      title: CLIENT.editClient,
+      children: <ClientForm client={c} onDone={() => { modals.closeAll(); router.refresh(); }} />,
+      size: 'sm',
+    });
+  }
+
+  function onDelete(c: Client) {
+    modals.openConfirmModal({
+      title: CLIENT.deleteConfirm(c.name),
+      children: <Text size="sm" c="dimmed">Tasks assigned to this client will be unlinked.</Text>,
+      labels: { confirm: 'Delete', cancel: 'Cancel' },
+      confirmProps: { color: 'red' },
+      onConfirm: () => {
+        startTransition(async () => {
+          await deleteClient(c.id);
+          notifications.show({ message: `Client "${c.name}" deleted.` });
+          router.refresh();
+        });
+      },
     });
   }
 
   return (
     <>
-      <div className="flex justify-end">
-        <Button variant="primary" onClick={openAdd}>
-          <Plus size={16} /> {CLIENT.addClient}
+      <Group justify="flex-end" mb="md">
+        <Button leftSection={<Plus size={16} />} onClick={openAdd}>
+          {CLIENT.addClient}
         </Button>
-      </div>
+      </Group>
 
       {clients.length === 0 ? (
-        <Card className="mt-4">
-          <EmptyState icon={<Users size={28} />} title={CLIENT.empty.title} description={CLIENT.empty.description} />
+        <Card>
+          <Stack align="center" py="xl" gap="sm">
+            <Users size={32} color="var(--mantine-color-dimmed)" />
+            <Title order={5} c="dimmed">{CLIENT.empty.title}</Title>
+            <Text size="sm" c="dimmed" ta="center">{CLIENT.empty.description}</Text>
+          </Stack>
         </Card>
       ) : (
-        <motion.div
-          className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
-          variants={staggerContainer(0.055)}
-          initial="initial"
-          animate="animate"
-        >
-          {clients.map((c) => (
-            <motion.div key={c.id} variants={staggerItem}>
-              <HoverCard>
-              <Card className="tf-scan-wrap flex flex-col p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-fg">{c.name}</p>
-                  <div className="flex gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                      onClick={() => openEdit(c)}
-                      className="tf-ring rounded-lg p-1.5 text-muted hover:bg-panel-2 hover:text-fg"
-                      aria-label="Edit"
-                    >
-                      <Pencil size={14} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
-                      onClick={() => onDelete(c)}
-                      className="tf-ring rounded-lg p-1.5 text-muted hover:bg-rose-soft hover:text-rose"
-                      aria-label="Delete"
-                    >
-                      <Trash2 size={14} />
-                    </motion.button>
-                  </div>
-                </div>
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+          {clients.map(c => (
+            <Card key={c.id}>
+              <Group justify="space-between" align="flex-start" mb="xs">
+                <Text fw={500}>{c.name}</Text>
+                <Group gap={4}>
+                  <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(c)} aria-label="Edit">
+                    <Pencil size={14} />
+                  </ActionIcon>
+                  <ActionIcon variant="subtle" color="red" onClick={() => onDelete(c)} aria-label="Delete">
+                    <Trash2 size={14} />
+                  </ActionIcon>
+                </Group>
+              </Group>
 
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  {c.is_maintain_active ? (
-                    <Badge tone="accent">{CLIENT.maintainActive}</Badge>
-                  ) : (
-                    <Badge tone="muted">{CLIENT.noRetainer}</Badge>
-                  )}
-                </div>
+              <Group gap="xs" mb="sm">
+                {c.is_maintain_active ? (
+                  <Badge color="indigo" variant="light">{CLIENT.maintainActive}</Badge>
+                ) : (
+                  <Badge color="gray" variant="light">{CLIENT.noRetainer}</Badge>
+                )}
+              </Group>
 
-                <div className="mt-3 font-mono text-sm">
-                  <span className="text-muted">{CLIENT.retainerLabel} </span>
-                  <span className="text-fg">{formatMoney(c.monthly_retainer, currency)}</span>
-                  <span className="text-muted">{CLIENT.perMonth}</span>
-                </div>
+              <Text size="sm" ff="monospace">
+                <Text span c="dimmed">{CLIENT.retainerLabel} </Text>
+                {formatMoney(c.monthly_retainer, currency)}
+                <Text span c="dimmed">{CLIENT.perMonth}</Text>
+              </Text>
 
-                {c.note && <p className="mt-2 line-clamp-2 text-xs text-muted">{c.note}</p>}
-              </Card>
-              </HoverCard>
-            </motion.div>
+              {c.note && <Text size="xs" c="dimmed" lineClamp={2} mt="xs">{c.note}</Text>}
+            </Card>
           ))}
-        </motion.div>
+        </SimpleGrid>
       )}
-
-      <Modal open={open} onClose={() => setOpen(false)}
-        title={editing ? CLIENT.editClient : CLIENT.addClient}>
-        <ClientForm key={`${editing?.id ?? "new"}-${nonce}`} client={editing} onDone={onDone} />
-      </Modal>
     </>
   );
 }
 
 function ClientForm({ client, onDone }: { client: Client | null; onDone: () => void }) {
-  const toast = useToast();
-  const [state, action, pending] = useActionState<ClientActionState, FormData>(saveClient, {});
+  const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    if (state.ok) {
-      toast.success(client ? `Client updated.` : `Client added.`);
+  const form = useForm({
+    initialValues: {
+      name:               client?.name ?? '',
+      monthly_retainer:   client?.monthly_retainer != null ? Number(client.monthly_retainer) : 0,
+      is_maintain_active: client?.is_maintain_active ?? false,
+      note:               client?.note ?? '',
+    },
+    validate: {
+      name: (v) => (v.trim() ? null : CLIENT.fields.name + ' is required'),
+    },
+  });
+
+  const handleSubmit = form.onSubmit(async (values) => {
+    setPending(true);
+    const fd = new FormData();
+    if (client) fd.set('id', client.id);
+    fd.set('name',               values.name.trim());
+    fd.set('monthly_retainer',   String(values.monthly_retainer));
+    fd.set('is_maintain_active', values.is_maintain_active ? 'on' : '');
+    fd.set('note',               values.note);
+
+    const res = await saveClient({}, fd);
+    setPending(false);
+    if (res?.error) {
+      notifications.show({ color: 'red', message: res.error });
+    } else {
+      notifications.show({ message: client ? 'Client updated.' : 'Client added.' });
       onDone();
     }
-  }, [state.ok]); // eslint-disable-line react-hooks/exhaustive-deps
+  });
 
   return (
-    <form action={action} className="space-y-4">
-      {client && <input type="hidden" name="id" value={client.id} />}
-
-      <ModalField>
-        <Field label={CLIENT.fields.name}>
-          <Input name="name" defaultValue={client?.name ?? ""} required autoFocus />
-        </Field>
-      </ModalField>
-
-      <ModalField>
-        <Field label={CLIENT.fields.retainer} hint={CLIENT.fields.retainerHint}>
-          <Input name="monthly_retainer" type="number" min={0} step={1000}
-            defaultValue={client?.monthly_retainer ?? 0} className="font-mono" />
-        </Field>
-      </ModalField>
-
-      <ModalField>
-        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-base/40 px-3 py-2.5 transition-colors hover:bg-panel-2">
-          <input type="checkbox" name="is_maintain_active"
-            defaultChecked={client?.is_maintain_active ?? false}
-            className="h-4 w-4 accent-[var(--color-accent)]" />
-          <span className="text-sm text-fg">
-            {CLIENT.fields.maintainActive}
-            <span className="block text-xs text-muted">{CLIENT.fields.maintainActiveHint}</span>
-          </span>
-        </label>
-      </ModalField>
-
-      <ModalField>
-        <Field label={CLIENT.fields.note}>
-          <Textarea name="note" defaultValue={client?.note ?? ""} />
-        </Field>
-      </ModalField>
-
-      <AnimatePresence>
-        {state.error && (
-          <motion.p {...fadeUp} className="text-sm text-rose">{state.error}</motion.p>
-        )}
-      </AnimatePresence>
-
-      <ModalField>
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="submit" variant="primary" disabled={pending}>
-            {pending ? CLIENT.saving : CLIENT.save}
-          </Button>
-        </div>
-      </ModalField>
+    <form onSubmit={handleSubmit}>
+      <TextInput
+        label={CLIENT.fields.name}
+        required
+        autoFocus
+        mb="sm"
+        {...form.getInputProps('name')}
+      />
+      <NumberInput
+        label={CLIENT.fields.retainer}
+        description={CLIENT.fields.retainerHint}
+        min={0}
+        step={1000}
+        mb="sm"
+        {...form.getInputProps('monthly_retainer')}
+      />
+      <Checkbox
+        label={
+          <div>
+            <Text size="sm">{CLIENT.fields.maintainActive}</Text>
+            <Text size="xs" c="dimmed">{CLIENT.fields.maintainActiveHint}</Text>
+          </div>
+        }
+        mb="sm"
+        {...form.getInputProps('is_maintain_active', { type: 'checkbox' })}
+      />
+      <Textarea
+        label={CLIENT.fields.note}
+        mb="md"
+        autosize
+        minRows={2}
+        {...form.getInputProps('note')}
+      />
+      <Group justify="flex-end">
+        <Button type="submit" loading={pending}>{CLIENT.save}</Button>
+      </Group>
     </form>
   );
 }

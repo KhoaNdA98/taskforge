@@ -1,74 +1,67 @@
-"use client";
+'use client';
 
-import { useActionState, useState } from "react";
-import { motion } from "motion/react";
-import { signIn, signUp, type AuthState } from "@/app/auth/actions";
-import { Button, Input, Field } from "@/components/ui";
-import { AUTH } from "@/lib/strings";
-import { fadeUp } from "@/lib/motion";
+import { useActionState, useState } from 'react';
+import { TextInput, PasswordInput, Button, Alert, Text, Anchor } from '@mantine/core';
+import { signIn, signUp, type AuthState } from '@/app/auth/actions';
+import { AUTH } from '@/lib/strings';
 
 export function LoginForm() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const action = mode === "signin" ? signIn : signUp;
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const action = mode === 'signin' ? signIn : signUp;
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
   return (
-    <form action={formAction} className="space-y-4">
-      <Field label={AUTH.email}>
-        <Input name="email" type="email" autoComplete="email" placeholder={AUTH.emailPlaceholder} required />
-      </Field>
-      <Field label={AUTH.password}>
-        <Input
-          name="password"
-          type="password"
-          autoComplete={mode === "signin" ? "current-password" : "new-password"}
-          placeholder="••••••••"
-          required
-        />
-      </Field>
+    <form action={formAction}>
+      <TextInput
+        name="email"
+        type="email"
+        label={AUTH.email}
+        placeholder={AUTH.emailPlaceholder}
+        autoComplete="email"
+        required
+        mb="md"
+      />
+      <PasswordInput
+        name="password"
+        label={AUTH.password}
+        placeholder="••••••••"
+        autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+        required
+        mb="md"
+      />
 
       {state.error && (
-        <motion.p
-          {...fadeUp}
-          className="rounded-xl border border-rose/25 bg-rose-soft px-3 py-2 text-sm text-rose"
-        >
+        <Alert color="red" mb="md" radius="md">
           {state.error}
-        </motion.p>
+        </Alert>
       )}
       {state.message && (
-        <motion.p
-          {...fadeUp}
-          className="rounded-xl border border-teal/25 bg-teal-soft px-3 py-2 text-sm text-teal"
-        >
+        <Alert color="teal" mb="md" radius="md">
           {state.message}
-        </motion.p>
+        </Alert>
       )}
 
-      <Button type="submit" variant="primary" disabled={pending} className="w-full">
-        {pending
-          ? mode === "signin" ? AUTH.signingIn : AUTH.signingUp
-          : mode === "signin" ? AUTH.signIn    : AUTH.signUp}
+      <Button type="submit" fullWidth loading={pending} mb="md">
+        {mode === 'signin' ? AUTH.signIn : AUTH.signUp}
       </Button>
 
-      <p className="text-center text-xs text-muted">
-        {mode === "signin" ? (
+      <Text ta="center" size="xs" c="dimmed">
+        {mode === 'signin' ? (
           <>
-            Don&apos;t have an account?{" "}
-            <button type="button" onClick={() => setMode("signup")}
-              className="font-medium text-accent-fg hover:underline">
+            Don&apos;t have an account?{' '}
+            <Anchor component="button" type="button" size="xs" onClick={() => setMode('signup')}>
               {AUTH.signUp}
-            </button>
+            </Anchor>
           </>
         ) : (
           <>
-            Already have an account?{" "}
-            <button type="button" onClick={() => setMode("signin")}
-              className="font-medium text-accent-fg hover:underline">
+            Already have an account?{' '}
+            <Anchor component="button" type="button" size="xs" onClick={() => setMode('signin')}>
               {AUTH.signIn}
-            </button>
+            </Anchor>
           </>
         )}
-      </p>
+      </Text>
     </form>
   );
 }

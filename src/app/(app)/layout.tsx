@@ -1,19 +1,24 @@
-import { requireUser } from "@/lib/dal";
-import { Sidebar } from "@/components/sidebar";
+import { AppShell } from '@mantine/core';
+import { requireUser } from '@/lib/dal';
+import { Sidebar } from '@/components/sidebar';
 
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
 
   return (
-    <div className="tf-backdrop flex min-h-dvh flex-col md:flex-row">
-      <Sidebar email={user.email ?? ""} />
-      <main className="flex-1 overflow-x-hidden px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-        <div className="mx-auto w-full max-w-6xl">{children}</div>
-      </main>
-    </div>
+    <AppShell
+      navbar={{ width: 220, breakpoint: 'sm' }}
+      padding="lg"
+      style={{ background: 'var(--mantine-color-gray-0)' }}
+    >
+      <AppShell.Navbar>
+        <Sidebar email={user.email ?? ''} />
+      </AppShell.Navbar>
+      <AppShell.Main>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          {children}
+        </div>
+      </AppShell.Main>
+    </AppShell>
   );
 }

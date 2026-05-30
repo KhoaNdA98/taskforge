@@ -1,33 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { cn } from "@/lib/utils";
-
-/**
- * Shared wrapper — shows value text; click → becomes editable; Escape cancels.
- */
-function CellWrap({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("group/cell relative w-full", className)}>{children}</div>
-  );
-}
-
-/* shared input class */
-const inputCls =
-  "w-full rounded-lg border border-accent/50 bg-panel-2 px-2 py-1 text-sm text-fg " +
-  "outline-none ring-2 ring-accent/30 transition-colors placeholder:text-muted";
-
-/* shared display class */
-const displayCls =
-  "cursor-text select-none rounded-lg px-2 py-1 text-sm transition-colors " +
-  "hover:bg-panel-2 group-hover/cell:bg-panel-2/60";
+import { useEffect, useRef, useState } from 'react';
 
 /* ── Editable text ───────────────────────────────────────────────────── */
 export function EditableText({
@@ -42,10 +15,11 @@ export function EditableText({
   bold?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft]     = useState(value);
+  const [draft,   setDraft]   = useState(value);
   const inputRef              = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setDraft(value); }, [value]);
 
   function commit() {
@@ -55,113 +29,105 @@ export function EditableText({
     else setDraft(value);
   }
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+        }}
+        style={{
+          width: '100%', border: '1px solid var(--mantine-color-indigo-4)',
+          borderRadius: 6, padding: '2px 6px', fontSize: 14,
+          outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
+          background: 'white', fontWeight: bold ? 500 : undefined,
+        }}
+      />
+    );
+  }
   return (
-    <CellWrap>
-      <AnimatePresence mode="wait" initial={false}>
-        {editing ? (
-          <motion.input
-            key="input"
-            ref={inputRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            className={inputCls}
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={e => {
-              if (e.key === "Enter")  { e.preventDefault(); commit(); }
-              if (e.key === "Escape") { setDraft(value); setEditing(false); }
-            }}
-          />
-        ) : (
-          <motion.span
-            key="display"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            onClick={() => setEditing(true)}
-            className={cn(displayCls, bold && "font-medium text-fg", !value && "text-muted")}
-          >
-            {value || placeholder || "—"}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </CellWrap>
+    <span
+      onClick={() => setEditing(true)}
+      style={{
+        cursor: 'text', display: 'block', padding: '2px 6px',
+        borderRadius: 6, fontSize: 14, fontWeight: bold ? 500 : undefined,
+        color: value ? undefined : 'var(--mantine-color-gray-5)',
+      }}
+    >
+      {value || placeholder || '—'}
+    </span>
   );
 }
 
 /* ── Editable number ─────────────────────────────────────────────────── */
 export function EditableNumber({
   value,
-  placeholder,
   step = 0.25,
-  min = 0,
+  min  = 0,
   onSave,
 }: {
   value: number | null;
-  placeholder?: string;
   step?: number;
   min?: number;
   onSave: (v: number | null) => void;
 }) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft]     = useState(value?.toString() ?? "");
+  const [draft,   setDraft]   = useState(value?.toString() ?? '');
   const inputRef              = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  useEffect(() => { setDraft(value?.toString() ?? ""); }, [value]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setDraft(value?.toString() ?? ''); }, [value]);
 
   function commit() {
     setEditing(false);
     const n = parseFloat(draft);
-    if (draft === "" || isNaN(n)) onSave(null);
+    if (draft === '' || isNaN(n)) onSave(null);
     else if (n !== value) onSave(n);
-    else setDraft(value?.toString() ?? "");
+    else setDraft(value?.toString() ?? '');
   }
 
-  const display = value != null ? `${value}h` : "—";
+  const display = value != null ? `${value}h` : '—';
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        step={step}
+        min={min}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => {
+          if (e.key === 'Enter')  { e.preventDefault(); commit(); }
+          if (e.key === 'Escape') { setDraft(value?.toString() ?? ''); setEditing(false); }
+        }}
+        style={{
+          width: 72, border: '1px solid var(--mantine-color-indigo-4)',
+          borderRadius: 6, padding: '2px 6px', fontSize: 13, textAlign: 'right',
+          outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
+          background: 'white', fontFamily: 'monospace',
+        }}
+      />
+    );
+  }
   return (
-    <CellWrap className="max-w-[80px]">
-      <AnimatePresence mode="wait" initial={false}>
-        {editing ? (
-          <motion.input
-            key="input"
-            ref={inputRef}
-            type="number"
-            step={step}
-            min={min}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            className={cn(inputCls, "font-mono text-right")}
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onBlur={commit}
-            onKeyDown={e => {
-              if (e.key === "Enter")  { e.preventDefault(); commit(); }
-              if (e.key === "Escape") { setDraft(value?.toString() ?? ""); setEditing(false); }
-            }}
-          />
-        ) : (
-          <motion.span
-            key="display"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            onClick={() => setEditing(true)}
-            className={cn(displayCls, "font-mono text-right text-fg-2", !value && "text-muted")}
-          >
-            {display}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </CellWrap>
+    <span
+      onClick={() => setEditing(true)}
+      style={{
+        cursor: 'text', display: 'block', padding: '2px 6px',
+        borderRadius: 6, fontSize: 13, textAlign: 'right',
+        fontFamily: 'monospace',
+        color: value ? 'var(--mantine-color-dark-5)' : 'var(--mantine-color-gray-5)',
+      }}
+    >
+      {display}
+    </span>
   );
 }
 
@@ -180,30 +146,38 @@ export function EditableDate({
 
   useEffect(() => { if (editing) inputRef.current?.showPicker?.(); }, [editing]);
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="date"
+        defaultValue={value}
+        autoFocus
+        onChange={e => {
+          if (e.target.value) { onSave(e.target.value); setEditing(false); }
+        }}
+        onBlur={() => setEditing(false)}
+        onKeyDown={e => { if (e.key === 'Escape') setEditing(false); }}
+        style={{
+          border: '1px solid var(--mantine-color-indigo-4)',
+          borderRadius: 6, padding: '2px 6px', fontSize: 12,
+          outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
+          background: 'white', fontFamily: 'monospace',
+        }}
+      />
+    );
+  }
   return (
-    <CellWrap className="max-w-[110px]">
-      {editing ? (
-        <input
-          ref={inputRef}
-          type="date"
-          defaultValue={value}
-          autoFocus
-          className={cn(inputCls, "font-mono text-xs")}
-          onChange={e => {
-            if (e.target.value) { onSave(e.target.value); setEditing(false); }
-          }}
-          onBlur={() => setEditing(false)}
-          onKeyDown={e => { if (e.key === "Escape") setEditing(false); }}
-        />
-      ) : (
-        <span
-          onClick={() => setEditing(true)}
-          className={cn(displayCls, "font-mono text-xs text-fg-2")}
-        >
-          {formatFn(value)}
-        </span>
-      )}
-    </CellWrap>
+    <span
+      onClick={() => setEditing(true)}
+      style={{
+        cursor: 'text', display: 'block', padding: '2px 6px',
+        borderRadius: 6, fontSize: 12, fontFamily: 'monospace',
+        color: 'var(--mantine-color-dark-4)',
+      }}
+    >
+      {formatFn(value)}
+    </span>
   );
 }
 
@@ -219,36 +193,38 @@ export function EditableSelect<T extends string>({
   renderValue: (v: T) => React.ReactNode;
   onSave: (v: T) => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const selectRef             = useRef<HTMLSelectElement>(null);
+  const [editing,  setEditing] = useState(false);
+  const selectRef              = useRef<HTMLSelectElement>(null);
 
   useEffect(() => { if (editing) selectRef.current?.focus(); }, [editing]);
 
+  if (editing) {
+    return (
+      <select
+        ref={selectRef}
+        defaultValue={value}
+        autoFocus
+        onChange={e => { onSave(e.target.value as T); setEditing(false); }}
+        onBlur={() => setEditing(false)}
+        onKeyDown={e => { if (e.key === 'Escape') setEditing(false); }}
+        style={{
+          border: '1px solid var(--mantine-color-indigo-4)',
+          borderRadius: 6, padding: '2px 6px', fontSize: 13,
+          outline: 'none', background: 'white', cursor: 'pointer',
+        }}
+      >
+        {options.map(o => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    );
+  }
   return (
-    <CellWrap>
-      {editing ? (
-        <select
-          ref={selectRef}
-          defaultValue={value}
-          autoFocus
-          size={1}
-          className={cn(inputCls, "cursor-pointer appearance-none")}
-          onChange={e => { onSave(e.target.value as T); setEditing(false); }}
-          onBlur={() => setEditing(false)}
-          onKeyDown={e => { if (e.key === "Escape") setEditing(false); }}
-        >
-          {options.map(o => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      ) : (
-        <span
-          onClick={() => setEditing(true)}
-          className={cn(displayCls, "inline-flex items-center gap-1")}
-        >
-          {renderValue(value)}
-        </span>
-      )}
-    </CellWrap>
+    <span
+      onClick={() => setEditing(true)}
+      style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', padding: '2px 4px', borderRadius: 6 }}
+    >
+      {renderValue(value)}
+    </span>
   );
 }

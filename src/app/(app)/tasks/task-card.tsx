@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import { forwardRef, type HTMLAttributes } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Pencil, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui";
-import { formatMoney, formatHours, formatDate } from "@/lib/format";
-import { type TaskWithClient, TASK_TYPE_LABEL, type TaskStatus, type TaskType } from "@/lib/types";
-import type { Client } from "@/lib/types";
+import { forwardRef, type HTMLAttributes } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { Badge, Group, Text } from '@mantine/core';
+import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { formatMoney, formatHours, formatDate } from '@/lib/format';
+import { type TaskWithClient, TASK_TYPE_LABEL, type TaskStatus, type TaskType } from '@/lib/types';
+import type { Client } from '@/lib/types';
 
-type GroupBy = "status" | "client" | "type" | "none";
+type GroupBy = 'status' | 'client' | 'type' | 'none';
 
-const statusDot: Record<TaskStatus, string> = {
-  todo:  "bg-fg-2/30",
-  doing: "bg-amber",
-  done:  "bg-teal",
+const statusColor: Record<TaskStatus, string> = {
+  todo:  'var(--mantine-color-gray-4)',
+  doing: 'var(--mantine-color-yellow-5)',
+  done:  'var(--mantine-color-teal-5)',
 };
 
-const typeTone: Record<TaskType, "teal" | "accent"> = {
-  on_demand: "teal",
-  maintain:  "accent",
+const typeBadgeColor: Record<TaskType, string> = {
+  on_demand: 'teal',
+  maintain:  'indigo',
 };
 
-/* ── Row ─────────────────────────────────────────────────────────────── */
+/* ── Static card row ─────────────────────────────────────────────────── */
 export const TaskCardStatic = forwardRef<
   HTMLDivElement,
   HTMLAttributes<HTMLDivElement> & {
@@ -41,39 +41,40 @@ export const TaskCardStatic = forwardRef<
   ref,
 ) {
   const clientName = clients.find(c => c.id === task.client_id)?.name;
-  const isOD = task.type === "on_demand";
+  const isOD = task.type === 'on_demand';
 
   return (
     <div
       ref={ref}
-      style={style}
-      className={[
-        "group/row flex items-center gap-2 rounded-lg px-2 py-[7px] text-sm select-none",
-        "transition-colors duration-100",
-        overlay
-          ? "bg-panel shadow-xl shadow-black/10 ring-1 ring-accent/20 rotate-[0.6deg] scale-[1.02] cursor-grabbing"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '6px 8px', borderRadius: 8, fontSize: 14,
+        userSelect: 'none', cursor: 'default',
+        background: overlay
+          ? 'white'
           : selected
-            ? "bg-accent-soft/20 hover:bg-accent-soft/30"
-            : "hover:bg-panel-2/70",
-        className ?? "",
-      ].join(" ")}
+            ? 'var(--mantine-color-indigo-0)'
+            : undefined,
+        boxShadow: overlay ? '0 8px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)' : undefined,
+        transform: overlay ? 'rotate(0.6deg) scale(1.02)' : undefined,
+        ...style,
+      }}
+      className={`task-card-row ${className ?? ''}`}
       {...rest}
     >
       {/* Drag handle */}
       <GripVertical
         size={13}
-        className={[
-          "shrink-0 text-muted/40",
-          overlay
-            ? "opacity-50"
-            : "cursor-grab opacity-0 transition-opacity group-hover/row:opacity-100",
-        ].join(" ")}
+        style={{
+          flexShrink: 0, color: 'var(--mantine-color-gray-4)',
+          cursor: overlay ? 'grabbing' : 'grab',
+        }}
       />
 
-      {/* Checkbox (bulk select) or status dot */}
+      {/* Checkbox or status dot */}
       {onToggleSelect ? (
         <label
-          className="flex shrink-0 cursor-pointer items-center"
+          style={{ display: 'flex', flexShrink: 0, cursor: 'pointer' }}
           onPointerDown={e => e.stopPropagation()}
           onClick={e => e.stopPropagation()}
         >
@@ -81,60 +82,74 @@ export const TaskCardStatic = forwardRef<
             type="checkbox"
             checked={selected ?? false}
             onChange={onToggleSelect}
-            className="h-3.5 w-3.5 accent-[var(--color-accent)]"
+            style={{ width: 14, height: 14, accentColor: 'var(--mantine-color-indigo-6)' }}
           />
         </label>
       ) : (
-        <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${statusDot[task.status]}`} />
+        <span
+          style={{
+            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+            background: statusColor[task.status],
+          }}
+        />
       )}
 
       {/* Name */}
-      <span className="min-w-0 flex-1 truncate text-fg">{task.name}</span>
+      <Text size="sm" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {task.name}
+      </Text>
 
-      {/* Right-side meta */}
-      <div className="flex shrink-0 items-center gap-3">
-        {/* Type badge — hidden when grouped by type */}
-        {groupBy !== "type" && (
-          <Badge tone={typeTone[task.type]}>{TASK_TYPE_LABEL[task.type]}</Badge>
+      {/* Right meta */}
+      <Group gap="sm" wrap="nowrap" style={{ flexShrink: 0 }}>
+        {groupBy !== 'type' && (
+          <Badge color={typeBadgeColor[task.type]} variant="light" size="xs">
+            {TASK_TYPE_LABEL[task.type]}
+          </Badge>
         )}
 
-        {/* Status dot — shown only when not grouped by status */}
-        {groupBy !== "status" && !onToggleSelect && (
-          <span className={`h-[7px] w-[7px] shrink-0 rounded-full ${statusDot[task.status]}`} />
+        {groupBy !== 'status' && !onToggleSelect && (
+          <span
+            style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: statusColor[task.status], flexShrink: 0,
+            }}
+          />
         )}
 
-        {/* Client */}
-        {groupBy !== "client" && clientName && (
-          <span className="hidden font-mono text-[11px] text-muted sm:block">{clientName}</span>
+        {groupBy !== 'client' && clientName && (
+          <Text size="xs" c="dimmed" ff="monospace" visibleFrom="sm" style={{ flexShrink: 0 }}>
+            {clientName}
+          </Text>
         )}
 
-        {/* Date */}
-        <span className="w-9 text-right font-mono text-[11px] text-muted">
+        <Text size="xs" c="dimmed" ff="monospace" w={36} ta="right" style={{ flexShrink: 0 }}>
           {formatDate(task.task_date).slice(0, 5)}
-        </span>
+        </Text>
 
-        {/* Hours + Amount */}
         {isOD ? (
           <>
-            <span className="w-8 text-right font-mono text-[11px] text-fg-2">
+            <Text size="xs" c="dimmed" ff="monospace" w={32} ta="right" style={{ flexShrink: 0 }}>
               {formatHours(task.hours)}
-            </span>
-            <span className="w-[72px] text-right font-mono text-[11px] font-medium text-teal">
+            </Text>
+            <Text size="xs" c="teal" fw={500} ff="monospace" w={72} ta="right" style={{ flexShrink: 0 }}>
               {formatMoney(task.amount, currency)}
-            </span>
+            </Text>
           </>
         ) : (
-          <span className="w-[88px]" />
+          <span style={{ width: 88, flexShrink: 0 }} />
         )}
 
-        {/* Actions */}
         {!overlay && (onEdit || onDelete) && (
-          <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover/row:opacity-100">
+          <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }} className="task-card-actions">
             {onEdit && (
               <button
                 onClick={e => { e.stopPropagation(); onEdit(); }}
                 onPointerDown={e => e.stopPropagation()}
-                className="tf-ring rounded-md p-1 text-muted hover:bg-panel-3 hover:text-fg"
+                style={{
+                  padding: 4, borderRadius: 4, border: 'none', background: 'transparent',
+                  cursor: 'pointer', color: 'var(--mantine-color-gray-5)',
+                  display: 'flex', alignItems: 'center',
+                }}
                 aria-label="Edit"
               >
                 <Pencil size={12} />
@@ -144,20 +159,24 @@ export const TaskCardStatic = forwardRef<
               <button
                 onClick={e => { e.stopPropagation(); onDelete(); }}
                 onPointerDown={e => e.stopPropagation()}
-                className="tf-ring rounded-md p-1 text-muted hover:bg-rose-soft hover:text-rose"
+                style={{
+                  padding: 4, borderRadius: 4, border: 'none', background: 'transparent',
+                  cursor: 'pointer', color: 'var(--mantine-color-gray-5)',
+                  display: 'flex', alignItems: 'center',
+                }}
                 aria-label="Delete"
               >
                 <Trash2 size={12} />
               </button>
             )}
-          </div>
+          </Group>
         )}
-      </div>
+      </Group>
     </div>
   );
 });
 
-/* ── Sortable wrapper ─────────────────────────────────────────────────── */
+/* ── Sortable wrapper ────────────────────────────────────────────────── */
 export function SortableTaskCard({
   task,
   clients,

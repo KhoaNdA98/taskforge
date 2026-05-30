@@ -1,51 +1,70 @@
-"use client";
+'use client';
 
-import { useActionState } from "react";
-import { Check } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
-import { updateSettings, type SettingsState } from "./actions";
-import { Button, Input, Select, Field } from "@/components/ui";
-import { SETTINGS } from "@/lib/strings";
-import { fadeUp } from "@/lib/motion";
-import type { Settings } from "@/lib/types";
+import { useState } from 'react';
+import { useForm } from '@mantine/form';
+import { NumberInput, Select, Button, Group, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { Check } from 'lucide-react';
+import { updateSettings } from './actions';
+import { SETTINGS } from '@/lib/strings';
+import type { Settings } from '@/lib/types';
 
 export function SettingsForm({ settings }: { settings: Settings }) {
-  const [state, action, pending] = useActionState<SettingsState, FormData>(updateSettings, {});
+  const [pending, setPending] = useState(false);
+  const [saved,   setSaved]   = useState(false);
+
+  const form = useForm({
+    initialValues: {
+      hourly_rate: settings.hourly_rate != null ? Number(settings.hourly_rate) : 0,
+      currency:    settings.currency,
+    },
+  });
+
+  const handleSubmit = form.onSubmit(async (values) => {
+    setPending(true);
+    setSaved(false);
+    const fd = new FormData();
+    fd.set('hourly_rate', String(values.hourly_rate));
+    fd.set('currency',    values.currency);
+
+    const res = await updateSettings({}, fd);
+    setPending(false);
+    if (res?.error) {
+      notifications.show({ color: 'red', message: res.error });
+    } else {
+      setSaved(true);
+      notifications.show({ message: SETTINGS.saved });
+    }
+  });
 
   return (
-    <form action={action} className="space-y-5">
-      <Field label={SETTINGS.fields.rate} hint={SETTINGS.fields.rateHint}>
-        <Input
-          name="hourly_rate"
-          type="number"
-          min={0}
-          step={1000}
-          defaultValue={settings.hourly_rate}
-          className="font-mono"
-        />
-      </Field>
-      <Field label={SETTINGS.fields.currency}>
-        <Select name="currency" defaultValue={settings.currency}>
-          <option value="VND">{SETTINGS.currencies.VND}</option>
-          <option value="USD">{SETTINGS.currencies.USD}</option>
-        </Select>
-      </Field>
-
-      <div className="flex items-center gap-3">
-        <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? SETTINGS.saving : SETTINGS.save}
-        </Button>
-        <AnimatePresence>
-          {state.ok && (
-            <motion.span {...fadeUp} className="inline-flex items-center gap-1 text-sm text-teal">
-              <Check size={14} /> {SETTINGS.saved}
-            </motion.span>
-          )}
-          {state.error && (
-            <motion.span {...fadeUp} className="text-sm text-rose">{state.error}</motion.span>
-          )}
-        </AnimatePresence>
-      </div>
+    <form onSubmit={handleSubmit}>
+      <NumberInput
+        label={SETTINGS.fields.rate}
+        description={SETTINGS.fields.rateHint}
+        min={0}
+        step={1000}
+        mb="md"
+        {...form.getInputProps('hourly_rate')}
+      />
+      <Select
+        label={SETTINGS.fields.currency}
+        mb="xl"
+        data={[
+          { value: 'VND', label: SETTINGS.currencies.VND },
+          { value: 'USD', label: SETTINGS.currencies.USD },
+        ]}
+        {...form.getInputProps('currency')}
+      />
+      <Group>
+        <Button type="submit" loading={pending}>{SETTINGS.save}</Button>
+        {saved && (
+          <Group gap={4}>
+            <Check size={14} color="var(--mantine-color-teal-6)" />
+            <Text size="sm" c="teal">{SETTINGS.saved}</Text>
+          </Group>
+        )}
+      </Group>
     </form>
   );
 }
