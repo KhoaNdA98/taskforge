@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import {
   SimpleGrid, Card, Text, Group, Title, Stack,
-  Badge, Skeleton, Table, ThemeIcon, Anchor,
+  Badge, Skeleton, Table, ThemeIcon,
 } from '@mantine/core';
 import {
   Clock, Wallet, Repeat, Coins, ArrowRight,
@@ -166,9 +166,9 @@ async function RecentTasks({ month }: { month: string }) {
     <Card h="100%">
       <Group justify="space-between" mb="md">
         <Text fw={600} size="sm">{DASHBOARD.recentTasks}</Text>
-        <Anchor component={Link} href="/tasks" size="xs" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <Link href="/tasks" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 'var(--mantine-font-size-xs)', color: 'var(--mantine-color-anchor)', textDecoration: 'none' }}>
           {DASHBOARD.viewAll} <ArrowRight size={13} />
-        </Anchor>
+        </Link>
       </Group>
 
       {tasks.length === 0 ? (
