@@ -44,7 +44,7 @@ export const TASK_TYPE_LABEL: Record<TaskType, string> = {
 };
 
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
-  todo: "Cần làm",
-  doing: "Đang làm",
-  done: "Xong",
+  todo: "To do",
+  doing: "In progress",
+  done: "Done",
 };

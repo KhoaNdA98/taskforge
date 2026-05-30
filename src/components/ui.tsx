@@ -1,4 +1,5 @@
 import * as React from "react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /* ── Button ──────────────────────────────────────────────────────────── */
@@ -14,27 +15,33 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <motion.button
+      whileHover={{ scale: props.disabled ? 1 : 1.015, y: props.disabled ? 0 : -1 }}
+      whileTap={{ scale: props.disabled ? 1 : 0.97 }}
+      transition={{ type: "spring", stiffness: 500, damping: 36 }}
       className={cn(
-        "tf-ring inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+        "tf-ring inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-colors",
+        "disabled:cursor-not-allowed disabled:opacity-40",
         size === "sm" ? "h-8 px-3 text-xs" : "h-10 px-4 text-sm",
         variant === "primary" &&
-          "bg-accent text-white hover:bg-accent/85 shadow-[0_0_0_1px_rgba(124,108,255,0.4)]",
+          "bg-accent text-white shadow-[0_0_0_1px_rgba(124,108,255,0.5),0_4px_12px_rgba(124,108,255,0.25)] hover:bg-accent/90",
         variant === "secondary" &&
-          "border border-border bg-panel-2 text-fg hover:border-accent/50 hover:bg-panel",
-        variant === "ghost" && "text-muted hover:bg-panel-2 hover:text-fg",
+          "border border-border bg-panel-2 text-fg hover:border-border-mid hover:bg-panel-3",
+        variant === "ghost" && "text-fg-2 hover:bg-panel-2 hover:text-fg",
         variant === "danger" &&
-          "border border-rose/30 bg-rose/10 text-rose hover:bg-rose/20",
+          "border border-rose/25 bg-rose-soft text-rose hover:bg-rose/15",
         className,
       )}
-      {...props}
+      {...(props as React.ComponentProps<typeof motion.button>)}
     />
   );
 }
 
 /* ── Inputs ──────────────────────────────────────────────────────────── */
 const fieldBase =
-  "tf-ring w-full rounded-lg border border-border bg-base/60 px-3 py-2 text-sm text-fg placeholder:text-muted/60 transition-colors hover:border-border focus:border-accent/60 disabled:opacity-50";
+  "tf-ring w-full rounded-xl border border-border bg-base/50 px-3 py-2 text-sm text-fg " +
+  "placeholder:text-muted transition-all duration-150 " +
+  "hover:border-border-mid focus:border-accent/50 focus:bg-panel disabled:opacity-40";
 
 export const Input = React.forwardRef<
   HTMLInputElement,
@@ -71,14 +78,11 @@ export const Select = React.forwardRef<
   );
 });
 
-export function Label({
-  className,
-  ...props
-}: React.LabelHTMLAttributes<HTMLLabelElement>) {
+export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
   return (
     <label
       className={cn(
-        "mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-muted",
+        "mb-1.5 block font-mono text-[11px] uppercase tracking-widest text-muted",
         className,
       )}
       {...props}
@@ -101,20 +105,17 @@ export function Field({
     <div className={className}>
       <Label>{label}</Label>
       {children}
-      {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs leading-relaxed text-muted">{hint}</p>}
     </div>
   );
 }
 
 /* ── Card ────────────────────────────────────────────────────────────── */
-export function Card({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-panel/80 backdrop-blur-sm",
+        "rounded-2xl border border-border bg-panel/80 backdrop-blur-sm",
         className,
       )}
       {...props}
@@ -135,16 +136,17 @@ export function Badge({
   children: React.ReactNode;
 }) {
   const tones: Record<BadgeTone, string> = {
-    accent: "bg-accent-soft text-accent-fg border-accent/30",
-    teal: "bg-teal-soft text-teal border-teal/30",
-    amber: "bg-amber-soft text-amber border-amber/30",
-    rose: "bg-rose/10 text-rose border-rose/30",
-    muted: "bg-panel-2 text-muted border-border",
+    accent: "bg-accent-soft text-accent-fg border-accent/20",
+    teal:   "bg-teal-soft   text-teal      border-teal/20",
+    amber:  "bg-amber-soft  text-amber     border-amber/20",
+    rose:   "bg-rose-soft   text-rose      border-rose/20",
+    muted:  "bg-panel-2     text-fg-2      border-border",
   };
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium",
+        "inline-flex items-center gap-1 rounded-lg border px-2 py-0.5",
+        "font-mono text-[11px] font-medium",
         tones[tone],
         className,
       )}
@@ -167,7 +169,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight">{title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-fg">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
@@ -187,18 +189,16 @@ export function EmptyState({
 }) {
   return (
     <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-      {icon && <div className="mb-1 text-muted">{icon}</div>}
+      {icon && <div className="mb-2 text-muted opacity-60">{icon}</div>}
       <p className="text-sm font-medium text-fg">{title}</p>
-      {description && (
-        <p className="max-w-sm text-sm text-muted">{description}</p>
-      )}
+      {description && <p className="max-w-sm text-sm text-muted">{description}</p>}
     </div>
   );
 }
 
 /* ── Skeleton ────────────────────────────────────────────────────────── */
 function Shimmer({ className }: { className?: string }) {
-  return <div className={cn("tf-shimmer rounded-md", className)} />;
+  return <div className={cn("tf-shimmer rounded-xl", className)} />;
 }
 
 export function StatCardsSkeleton() {
@@ -222,11 +222,14 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
       </div>
       <div className="divide-y divide-border-soft">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3"
-            style={{ opacity: 1 - i * 0.08 }}>
+          <div
+            key={i}
+            className="flex items-center gap-4 px-4 py-3"
+            style={{ opacity: 1 - i * 0.09 }}
+          >
             <Shimmer className="h-3 w-20 shrink-0" />
             <Shimmer className="h-3 flex-1" />
-            <Shimmer className="h-5 w-16 shrink-0 rounded-full" />
+            <Shimmer className="h-5 w-16 shrink-0 rounded-lg" />
             <Shimmer className="h-3 w-24 shrink-0" />
           </div>
         ))}

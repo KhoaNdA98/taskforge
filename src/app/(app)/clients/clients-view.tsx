@@ -3,52 +3,40 @@
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
-import {
-  Button,
-  Input,
-  Textarea,
-  Field,
-  Card,
-  Badge,
-  EmptyState,
-} from "@/components/ui";
+import { motion, AnimatePresence } from "motion/react";
+import { Button, Input, Textarea, Field, Card, Badge, EmptyState } from "@/components/ui";
 import { Modal } from "@/components/modal";
+import { useToast } from "@/components/toast";
+import { useConfirm } from "@/components/confirm-dialog";
 import { formatMoney } from "@/lib/format";
+import { CLIENT } from "@/lib/strings";
+import { fadeUp, staggerContainer, gentle } from "@/lib/motion";
 import type { Client } from "@/lib/types";
 import { saveClient, deleteClient, type ClientActionState } from "./actions";
 
-export function ClientsView({
-  clients,
-  currency,
-}: {
-  clients: Client[];
-  currency: string;
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
+export function ClientsView({ clients, currency }: { clients: Client[]; currency: string }) {
+  const router  = useRouter();
+  const toast   = useToast();
+  const { confirm } = useConfirm();
+  const [open, setOpen]       = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
-  const [nonce, setNonce] = useState(0);
-  const [isPending, startTransition] = useTransition();
+  const [nonce, setNonce]     = useState(0);
+  const [, startTransition]   = useTransition();
 
-  function openAdd() {
-    setEditing(null);
-    setNonce((n) => n + 1);
-    setOpen(true);
-  }
-  function openEdit(c: Client) {
-    setEditing(c);
-    setNonce((n) => n + 1);
-    setOpen(true);
-  }
-  function onDone() {
-    setOpen(false);
-    router.refresh();
-  }
-  function onDelete(c: Client) {
-    if (!confirm(`Xoá khách "${c.name}"? Task của khách sẽ được gỡ liên kết.`))
-      return;
+  function openAdd()      { setEditing(null); setNonce(n => n + 1); setOpen(true); }
+  function openEdit(c: Client) { setEditing(c); setNonce(n => n + 1); setOpen(true); }
+  function onDone()       { setOpen(false); router.refresh(); }
+
+  async function onDelete(c: Client) {
+    const ok = await confirm({
+      title: CLIENT.deleteConfirm(c.name),
+      detail: "Tasks assigned to this client will be unlinked.",
+      confirmLabel: "Delete",
+    });
+    if (!ok) return;
     startTransition(async () => {
       await deleteClient(c.id);
+      toast.success(`Client "${c.name}" deleted.`);
       router.refresh();
     });
   }
@@ -57,145 +45,122 @@ export function ClientsView({
     <>
       <div className="flex justify-end">
         <Button variant="primary" onClick={openAdd}>
-          <Plus size={16} /> Thêm khách hàng
+          <Plus size={16} /> {CLIENT.addClient}
         </Button>
       </div>
 
       {clients.length === 0 ? (
         <Card className="mt-4">
-          <EmptyState
-            icon={<Users size={28} />}
-            title="Chưa có khách hàng nào"
-            description="Thêm khách để gán task và thiết lập phí maintain hàng tháng."
-          />
+          <EmptyState icon={<Users size={28} />} title={CLIENT.empty.title} description={CLIENT.empty.description} />
         </Card>
       ) : (
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {clients.map((c, i) => (
-            <Card key={c.id} className="tf-rise tf-scan-wrap flex flex-col p-4"
-              style={{ animationDelay: `${i * 60}ms` }}>
-              <div className="flex items-start justify-between gap-2">
-                <p className="font-medium text-fg">{c.name}</p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => openEdit(c)}
-                    className="tf-ring rounded-md p-1.5 text-muted hover:bg-panel-2 hover:text-fg"
-                    aria-label="Sửa"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(c)}
-                    disabled={isPending}
-                    className="tf-ring rounded-md p-1.5 text-muted hover:bg-rose/10 hover:text-rose"
-                    aria-label="Xoá"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+        <motion.div
+          className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          variants={staggerContainer(0.055)}
+          initial="initial"
+          animate="animate"
+        >
+          {clients.map((c) => (
+            <motion.div key={c.id} variants={fadeUp}>
+              <Card className="tf-scan-wrap flex flex-col p-4 transition-shadow hover:shadow-lg hover:shadow-black/20">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-fg">{c.name}</p>
+                  <div className="flex gap-1">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                      onClick={() => openEdit(c)}
+                      className="tf-ring rounded-lg p-1.5 text-muted hover:bg-panel-2 hover:text-fg"
+                      aria-label="Edit"
+                    >
+                      <Pencil size={14} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                      onClick={() => onDelete(c)}
+                      className="tf-ring rounded-lg p-1.5 text-muted hover:bg-rose-soft hover:text-rose"
+                      aria-label="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {c.is_maintain_active ? (
-                  <Badge tone="accent">maintain active</Badge>
-                ) : (
-                  <Badge tone="muted">no maintain</Badge>
-                )}
-              </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {c.is_maintain_active ? (
+                    <Badge tone="accent">{CLIENT.maintainActive}</Badge>
+                  ) : (
+                    <Badge tone="muted">{CLIENT.noRetainer}</Badge>
+                  )}
+                </div>
 
-              <div className="mt-3 font-mono text-sm">
-                <span className="text-muted">retainer </span>
-                <span className="text-fg">
-                  {formatMoney(c.monthly_retainer, currency)}
-                </span>
-                <span className="text-muted">/tháng</span>
-              </div>
+                <div className="mt-3 font-mono text-sm">
+                  <span className="text-muted">{CLIENT.retainerLabel} </span>
+                  <span className="text-fg">{formatMoney(c.monthly_retainer, currency)}</span>
+                  <span className="text-muted">{CLIENT.perMonth}</span>
+                </div>
 
-              {c.note && (
-                <p className="mt-2 line-clamp-2 text-xs text-muted">{c.note}</p>
-              )}
-            </Card>
+                {c.note && <p className="mt-2 line-clamp-2 text-xs text-muted">{c.note}</p>}
+              </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title={editing ? "Sửa khách hàng" : "Thêm khách hàng"}
-      >
-        <ClientForm
-          key={`${editing?.id ?? "new"}-${nonce}`}
-          client={editing}
-          onDone={onDone}
-        />
+      <Modal open={open} onClose={() => setOpen(false)}
+        title={editing ? CLIENT.editClient : CLIENT.addClient}>
+        <ClientForm key={`${editing?.id ?? "new"}-${nonce}`} client={editing} onDone={onDone} />
       </Modal>
     </>
   );
 }
 
-function ClientForm({
-  client,
-  onDone,
-}: {
-  client: Client | null;
-  onDone: () => void;
-}) {
-  const [state, action, pending] = useActionState<ClientActionState, FormData>(
-    saveClient,
-    {},
-  );
+function ClientForm({ client, onDone }: { client: Client | null; onDone: () => void }) {
+  const toast = useToast();
+  const [state, action, pending] = useActionState<ClientActionState, FormData>(saveClient, {});
 
   useEffect(() => {
-    if (state.ok) onDone();
-  }, [state.ok, onDone]);
+    if (state.ok) {
+      toast.success(client ? `Client updated.` : `Client added.`);
+      onDone();
+    }
+  }, [state.ok]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <form action={action} className="space-y-4">
       {client && <input type="hidden" name="id" value={client.id} />}
 
-      <Field label="Tên khách hàng">
+      <Field label={CLIENT.fields.name}>
         <Input name="name" defaultValue={client?.name ?? ""} required autoFocus />
       </Field>
 
-      <Field
-        label="Phí maintain / tháng"
-        hint="Retainer cố định nếu bạn maintain cho khách này. Để 0 nếu không có."
-      >
-        <Input
-          name="monthly_retainer"
-          type="number"
-          min={0}
-          step={1000}
-          defaultValue={client?.monthly_retainer ?? 0}
-          className="font-mono"
-        />
+      <Field label={CLIENT.fields.retainer} hint={CLIENT.fields.retainerHint}>
+        <Input name="monthly_retainer" type="number" min={0} step={1000}
+          defaultValue={client?.monthly_retainer ?? 0} className="font-mono" />
       </Field>
 
-      <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-border bg-base/40 px-3 py-2.5">
-        <input
-          type="checkbox"
-          name="is_maintain_active"
+      <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-base/40 px-3 py-2.5 transition-colors hover:bg-panel-2">
+        <input type="checkbox" name="is_maintain_active"
           defaultChecked={client?.is_maintain_active ?? false}
-          className="h-4 w-4 accent-[var(--color-accent)]"
-        />
+          className="h-4 w-4 accent-[var(--color-accent)]" />
         <span className="text-sm text-fg">
-          Đang maintain khách này
-          <span className="block text-xs text-muted">
-            Khi bật, retainer sẽ được tính vào doanh thu hàng tháng.
-          </span>
+          {CLIENT.fields.maintainActive}
+          <span className="block text-xs text-muted">{CLIENT.fields.maintainActiveHint}</span>
         </span>
       </label>
 
-      <Field label="Ghi chú">
+      <Field label={CLIENT.fields.note}>
         <Textarea name="note" defaultValue={client?.note ?? ""} />
       </Field>
 
-      {state.error && <p className="text-sm text-rose">{state.error}</p>}
+      <AnimatePresence>
+        {state.error && (
+          <motion.p {...fadeUp} className="text-sm text-rose">{state.error}</motion.p>
+        )}
+      </AnimatePresence>
 
       <div className="flex justify-end gap-2 pt-1">
         <Button type="submit" variant="primary" disabled={pending}>
-          {pending ? "Đang lưu…" : "Lưu"}
+          {pending ? CLIENT.saving : CLIENT.save}
         </Button>
       </div>
     </form>

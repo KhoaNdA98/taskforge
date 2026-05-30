@@ -1,29 +1,23 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { motion } from "motion/react";
 import { signIn, signUp, type AuthState } from "@/app/auth/actions";
 import { Button, Input, Field } from "@/components/ui";
+import { AUTH } from "@/lib/strings";
+import { fadeUp } from "@/lib/motion";
 
 export function LoginForm() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const action = mode === "signin" ? signIn : signUp;
-  const [state, formAction, pending] = useActionState<AuthState, FormData>(
-    action,
-    {},
-  );
+  const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
   return (
     <form action={formAction} className="space-y-4">
-      <Field label="Email">
-        <Input
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="ban@email.com"
-          required
-        />
+      <Field label={AUTH.email}>
+        <Input name="email" type="email" autoComplete="email" placeholder={AUTH.emailPlaceholder} required />
       </Field>
-      <Field label="Mật khẩu">
+      <Field label={AUTH.password}>
         <Input
           name="password"
           type="password"
@@ -34,38 +28,46 @@ export function LoginForm() {
       </Field>
 
       {state.error && (
-        <p className="rounded-lg border border-rose/30 bg-rose/10 px-3 py-2 text-sm text-rose">
+        <motion.p
+          {...fadeUp}
+          className="rounded-xl border border-rose/25 bg-rose-soft px-3 py-2 text-sm text-rose"
+        >
           {state.error}
-        </p>
+        </motion.p>
       )}
       {state.message && (
-        <p className="rounded-lg border border-teal/30 bg-teal-soft px-3 py-2 text-sm text-teal">
+        <motion.p
+          {...fadeUp}
+          className="rounded-xl border border-teal/25 bg-teal-soft px-3 py-2 text-sm text-teal"
+        >
           {state.message}
-        </p>
+        </motion.p>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        disabled={pending}
-        className="w-full"
-      >
+      <Button type="submit" variant="primary" disabled={pending} className="w-full">
         {pending
-          ? "Đang xử lý…"
-          : mode === "signin"
-            ? "Đăng nhập"
-            : "Tạo tài khoản"}
+          ? mode === "signin" ? AUTH.signingIn : AUTH.signingUp
+          : mode === "signin" ? AUTH.signIn    : AUTH.signUp}
       </Button>
 
       <p className="text-center text-xs text-muted">
-        {mode === "signin" ? "Chưa có tài khoản? " : "Đã có tài khoản? "}
-        <button
-          type="button"
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="font-medium text-accent-fg hover:underline"
-        >
-          {mode === "signin" ? "Đăng ký" : "Đăng nhập"}
-        </button>
+        {mode === "signin" ? (
+          <>
+            Don&apos;t have an account?{" "}
+            <button type="button" onClick={() => setMode("signup")}
+              className="font-medium text-accent-fg hover:underline">
+              {AUTH.signUp}
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <button type="button" onClick={() => setMode("signin")}
+              className="font-medium text-accent-fg hover:underline">
+              {AUTH.signIn}
+            </button>
+          </>
+        )}
       </p>
     </form>
   );
