@@ -44,7 +44,7 @@ export function EditableText({
           width: '100%', border: '1px solid var(--mantine-color-indigo-4)',
           borderRadius: 6, padding: '2px 6px', fontSize: 14,
           outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
-          background: 'white', fontWeight: bold ? 500 : undefined,
+          background: 'var(--mantine-color-dark-6)', fontWeight: bold ? 500 : undefined,
         }}
       />
     );
@@ -111,7 +111,7 @@ export function EditableNumber({
           width: 72, border: '1px solid var(--mantine-color-indigo-4)',
           borderRadius: 6, padding: '2px 6px', fontSize: 13, textAlign: 'right',
           outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
-          background: 'white', fontFamily: 'monospace',
+          background: 'var(--mantine-color-dark-6)', fontFamily: 'monospace',
         }}
       />
     );
@@ -123,7 +123,7 @@ export function EditableNumber({
         cursor: 'text', display: 'block', padding: '2px 6px',
         borderRadius: 6, fontSize: 13, textAlign: 'right',
         fontFamily: 'monospace',
-        color: value ? 'var(--mantine-color-dark-5)' : 'var(--mantine-color-gray-5)',
+        color: value ? 'var(--mantine-color-gray-3)' : 'var(--mantine-color-dark-2)',
       }}
     >
       {display}
@@ -162,7 +162,7 @@ export function EditableDate({
           border: '1px solid var(--mantine-color-indigo-4)',
           borderRadius: 6, padding: '2px 6px', fontSize: 12,
           outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
-          background: 'white', fontFamily: 'monospace',
+          background: 'var(--mantine-color-dark-6)', fontFamily: 'monospace',
         }}
       />
     );
@@ -210,7 +210,7 @@ export function EditableSelect<T extends string>({
         style={{
           border: '1px solid var(--mantine-color-indigo-4)',
           borderRadius: 6, padding: '2px 6px', fontSize: 13,
-          outline: 'none', background: 'white', cursor: 'pointer',
+          outline: 'none', background: 'var(--mantine-color-dark-6)', cursor: 'pointer',
         }}
       >
         {options.map(o => (

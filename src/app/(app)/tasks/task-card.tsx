@@ -51,11 +51,11 @@ export const TaskCardStatic = forwardRef<
         padding: '6px 8px', borderRadius: 8, fontSize: 14,
         userSelect: 'none', cursor: 'default',
         background: overlay
-          ? 'white'
+          ? 'var(--mantine-color-dark-6)'
           : selected
-            ? 'var(--mantine-color-indigo-0)'
+            ? 'rgba(99,102,241,0.1)'
             : undefined,
-        boxShadow: overlay ? '0 8px 24px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)' : undefined,
+        boxShadow: overlay ? '0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)' : undefined,
         transform: overlay ? 'rotate(0.6deg) scale(1.02)' : undefined,
         ...style,
       }}

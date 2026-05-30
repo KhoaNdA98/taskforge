@@ -72,10 +72,11 @@ export function TasksView({
     router.replace(`${pathname}?${buildParams({ view: v })}`, { scroll: false });
   }
 
-  function changeGroup(g: GroupBy) {
+  const changeGroup = useCallback((g: GroupBy) => {
     setGroupBy(g);
     router.replace(`${pathname}?${buildParams({ group: g })}`, { scroll: false });
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, router]);
 
   // Debounced search
   useEffect(() => {
@@ -252,6 +253,19 @@ export function TasksView({
         </Group>
 
         <Group gap="xs">
+          {viewMode === 'list' && (
+            <SegmentedControl
+              size="xs"
+              value={groupBy}
+              onChange={v => changeGroup(v as GroupBy)}
+              data={[
+                { value: 'status', label: FILTER.groupByStatus },
+                { value: 'client', label: FILTER.groupByClient },
+                { value: 'type',   label: FILTER.groupByType   },
+                { value: 'none',   label: FILTER.groupByNone   },
+              ]}
+            />
+          )}
           <SegmentedControl
             size="xs"
             value={viewMode}
@@ -291,8 +305,7 @@ export function TasksView({
           tasks={tasks}
           clients={clients}
           currency={currency}
-          initialGroupBy={groupBy}
-          onGroupByChange={changeGroup}
+          groupBy={groupBy}
           selectedIds={selectedIds}
           onToggleSelect={toggleSelect}
         />

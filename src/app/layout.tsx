@@ -4,24 +4,32 @@ import '@mantine/notifications/styles.css';
 import '@mantine/spotlight/styles.css';
 import './globals.css';
 import type { Metadata } from 'next';
+import { VT323 } from 'next/font/google';
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
 import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 import { theme } from '@/theme';
 
+const vt323 = VT323({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-pixel',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'TaskForge — Task & billing tracker',
-  description: 'Track tasks, log hours, and export billing reports for freelancers.',
+  title: 'TaskForge',
+  description: 'Task & billing tracker',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" {...mantineHtmlProps}>
+    <html lang="en" className={vt323.variable} {...mantineHtmlProps}>
       <head>
-        <ColorSchemeScript forceColorScheme="light" />
+        <ColorSchemeScript forceColorScheme="dark" />
       </head>
       <body>
-        <MantineProvider theme={theme} forceColorScheme="light">
+        <MantineProvider theme={theme} forceColorScheme="dark">
           <ModalsProvider>
             <Notifications position="bottom-right" />
             {children}

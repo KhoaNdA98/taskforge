@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import {
   SimpleGrid, Card, Text, Group, Title, Stack,
-  Badge, Skeleton, Table, ThemeIcon,
+  Badge, Skeleton, Table, TableTbody, TableTr, TableTd, ThemeIcon,
 } from '@mantine/core';
 import {
   Clock, Wallet, Repeat, Coins, ArrowRight,
@@ -175,26 +175,26 @@ async function RecentTasks({ month }: { month: string }) {
         <Text size="sm" c="dimmed" ta="center" py="xl">{DASHBOARD.noTasks}</Text>
       ) : (
         <Table striped={false} highlightOnHover withRowBorders={false} verticalSpacing={6}>
-          <Table.Tbody>
+          <TableTbody>
             {tasks.map(t => (
-              <Table.Tr key={t.id}>
-                <Table.Td w={50}>
+              <TableTr key={t.id}>
+                <TableTd w={50}>
                   <Text size="xs" c="dimmed" ff="monospace">{formatDate(t.task_date).slice(0, 5)}</Text>
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   <Text size="sm" truncate maw={240}>{t.name}</Text>
-                </Table.Td>
-                <Table.Td>
+                </TableTd>
+                <TableTd>
                   <Badge color={typeColor[t.type]} variant="light" size="sm">{TASK_TYPE_LABEL[t.type]}</Badge>
-                </Table.Td>
-                <Table.Td ta="right">
+                </TableTd>
+                <TableTd ta="right">
                   <Text size="xs" c="dimmed" ff="monospace">
                     {t.type === 'on_demand' ? formatMoney(t.amount, cur) : TASK_STATUS_LABEL[t.status]}
                   </Text>
-                </Table.Td>
-              </Table.Tr>
+                </TableTd>
+              </TableTr>
             ))}
-          </Table.Tbody>
+          </TableTbody>
         </Table>
       )}
 

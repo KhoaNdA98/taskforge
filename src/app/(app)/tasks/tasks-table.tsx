@@ -190,7 +190,7 @@ export function TasksTable({
               {sorted.map(task => (
                 <Table.Tr
                   key={task.id}
-                  style={{ background: selectedIds.has(task.id) ? 'var(--mantine-color-indigo-0)' : undefined }}
+                  style={{ background: selectedIds.has(task.id) ? 'rgba(99,102,241,0.1)' : undefined }}
                 >
                   <Table.Td>
                     <Checkbox
@@ -377,7 +377,7 @@ function QuickAddRow({ clients, onAdded }: { clients: Client[]; onAdded: () => v
             disabled={pending}
             style={{
               width: '100%', border: '1px solid var(--mantine-color-indigo-4)',
-              borderRadius: 6, padding: '4px 8px', fontSize: 13,
+              borderRadius: 0, padding: '4px 8px', fontSize: 13,
               outline: 'none', boxShadow: '0 0 0 2px var(--mantine-color-indigo-1)',
             }}
           />
@@ -386,7 +386,7 @@ function QuickAddRow({ clients, onAdded }: { clients: Client[]; onAdded: () => v
             onClick={activate}
             style={{
               display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
-              cursor: 'pointer', padding: '4px 8px', borderRadius: 6, fontSize: 13,
+              cursor: 'pointer', padding: '4px 8px', borderRadius: 0, fontSize: 13,
               color: 'var(--mantine-color-dimmed)',
             }}
           >
@@ -404,7 +404,7 @@ function QuickAddRow({ clients, onAdded }: { clients: Client[]; onAdded: () => v
               value={clientId}
               onChange={e => setClientId(e.target.value)}
               style={{
-                border: '1px solid var(--mantine-color-gray-3)', borderRadius: 6,
+                border: '1px solid var(--mantine-color-gray-3)', borderRadius: 0,
                 padding: '3px 6px', fontSize: 13, cursor: 'pointer', width: '100%',
               }}
             >

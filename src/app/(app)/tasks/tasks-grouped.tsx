@@ -8,14 +8,14 @@ import {
   useSensor, useSensors, closestCenter,
   type DragStartEvent, type DragOverEvent, type DragEndEvent,
 } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { useDroppable } from '@dnd-kit/core';
-import { Group, Text, SegmentedControl, UnstyledButton } from '@mantine/core';
+import { Group, Text, UnstyledButton } from '@mantine/core';
 import { modals } from '@mantine/modals';
 import { notifications } from '@mantine/notifications';
 import { ChevronRight, Plus } from 'lucide-react';
 import { formatMoney, formatHours } from '@/lib/format';
-import { TASK, FILTER } from '@/lib/strings';
+import { TASK } from '@/lib/strings';
 import {
   type TaskWithClient, type TaskStatus, type TaskType, type Client,
   TASK_TYPE_LABEL, TASK_STATUS_LABEL,
@@ -149,8 +149,8 @@ function DroppableGroup({ id, children }: { id: string; children: React.ReactNod
       ref={setNodeRef}
       style={{
         minHeight: 32, borderRadius: 8, transition: 'background 0.15s',
-        background: isOver ? 'var(--mantine-color-indigo-0)' : undefined,
-        outline: isOver ? '1px solid var(--mantine-color-indigo-3)' : undefined,
+        background: isOver ? 'rgba(99,102,241,0.07)' : undefined,
+        outline: isOver ? '1px solid rgba(99,102,241,0.25)' : undefined,
       }}
     >
       {children}
@@ -191,7 +191,7 @@ function GroupSection({
           display: 'flex', width: '100%', alignItems: 'center', gap: 8,
           padding: '6px 8px', borderRadius: 6, marginBottom: 2,
         }}
-        styles={{ root: { '&:hover': { background: 'var(--mantine-color-gray-1)' } } }}
+        styles={{ root: { '&:hover': { background: 'rgba(255,255,255,0.04)' } } }}
       >
         <ChevronRight
           size={13}
@@ -254,21 +254,17 @@ function GroupSection({
 /* ── Main ────────────────────────────────────────────────────────────── */
 export function TasksGrouped({
   tasks: initialTasks, clients, currency,
-  initialGroupBy = 'status', onGroupByChange,
+  groupBy,
   selectedIds, onToggleSelect,
 }: {
   tasks: TaskWithClient[];
   clients: Client[];
   currency: string;
-  initialGroupBy?: GroupBy;
-  onGroupByChange?: (g: GroupBy) => void;
+  groupBy: GroupBy;
   selectedIds?: Set<string>;
   onToggleSelect?: (id: string) => void;
 }) {
   const router = useRouter();
-
-  const [groupBy, setGroupBy] = useState<GroupBy>(initialGroupBy);
-  const handleGroupByChange = (g: GroupBy) => { setGroupBy(g); onGroupByChange?.(g); };
 
   const [tasks,    setTasks]    = useState<TaskWithClient[]>(initialTasks);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -296,65 +292,73 @@ export function TasksGrouped({
     setActiveId(active.id as string);
   }, []);
 
+  // Lightweight: only tracks which group is being hovered for visual highlight.
+  // @dnd-kit's SortableContext handles same-group reorder animation via CSS transforms — no setState needed.
   const onDragOver = useCallback(({ active, over }: DragOverEvent) => {
     if (!over) return;
-    const gs           = groupsRef.current;
-    const gb           = groupByRef.current;
-    const findGroup    = (id: string) => gs.find(g => g.tasks.some(t => t.id === id))?.id ?? null;
-    const activeGrpId  = findGroup(active.id as string);
-    const overIsGroup  = gs.some(g => g.id === over.id);
-    const targetGrpId  = overIsGroup
-      ? (over.id as string)
-      : (findGroup(over.id as string) ?? activeGrpId ?? '');
-
-    if (!targetGrpId) return;
-    const overTaskId = overIsGroup ? null : (over.id as string);
-
-    setTasks(prev => {
-      const task = prev.find(t => t.id === active.id);
-      if (!task) return prev;
-      const gUpdate = groupFieldUpdate(gb, targetGrpId);
-      const updated: TaskWithClient = {
-        ...task,
-        ...(gUpdate?.field === 'status'    ? { status:    gUpdate.value as TaskStatus } : {}),
-        ...(gUpdate?.field === 'type'      ? { type:      gUpdate.value as TaskType   } : {}),
-        ...(gUpdate?.field === 'client_id' ? { client_id: gUpdate.value               } : {}),
-      };
-      const without = prev.filter(t => t.id !== (active.id as string));
-      if (!overTaskId || overTaskId === targetGrpId) return [...without, updated];
-      const idx = without.findIndex(t => t.id === overTaskId);
-      if (idx === -1) return [...without, updated];
-      const next = [...without];
-      next.splice(idx, 0, updated);
-      return next;
-    });
+    const gs = groupsRef.current;
+    // intentionally empty — DroppableGroup.isOver from useDroppable handles highlight
+    void active; void over; void gs;
   }, []);
 
   const onDragEnd = useCallback(({ active, over }: DragEndEvent) => {
     setActiveId(null);
     if (!over) return;
 
-    const taskId       = active.id as string;
-    const gs           = groupsRef.current;
-    const gb           = groupByRef.current;
-    const overIsGroup  = gs.some(g => g.id === over.id);
-    const findGroup    = (id: string) => gs.find(g => g.tasks.some(t => t.id === id))?.id ?? null;
-    const targetGrpId  = overIsGroup
+    const taskId      = active.id as string;
+    const gs          = groupsRef.current;
+    const gb          = groupByRef.current;
+    const overIsGroup = gs.some(g => g.id === over.id);
+    const findGrpId   = (id: string) => gs.find(g => g.tasks.some(t => t.id === id))?.id ?? null;
+    const activeGrpId = findGrpId(taskId);
+    const targetGrpId = overIsGroup
       ? (over.id as string)
-      : (findGroup(over.id as string) ?? '');
+      : (findGrpId(over.id as string) ?? activeGrpId ?? '');
 
+    const activeGroup = gs.find(g => g.id === activeGrpId);
     const targetGroup = gs.find(g => g.id === targetGrpId);
-    if (!targetGroup) return;
+    if (!activeGroup || !targetGroup) return;
 
-    const taskList = targetGroup.tasks;
-    const idx      = taskList.findIndex(t => t.id === taskId);
-    const prevPos  = taskList[idx - 1]?.position ?? null;
-    const nextPos  = taskList[idx + 1]?.position ?? null;
-    const position = midpoint(
-      prevPos != null ? Number(prevPos) : null,
-      nextPos != null ? Number(nextPos) : null,
-    );
     const gUpdate = groupFieldUpdate(gb, targetGrpId);
+    let position: number;
+
+    if (activeGrpId === targetGrpId) {
+      // Same group — use arrayMove to compute neighbour positions
+      const list     = activeGroup.tasks;
+      const fromIdx  = list.findIndex(t => t.id === taskId);
+      const toIdx    = overIsGroup ? list.length - 1 : list.findIndex(t => t.id === (over.id as string));
+      if (fromIdx === -1 || fromIdx === toIdx) return;
+      const reordered = arrayMove(list, fromIdx, toIdx < 0 ? list.length - 1 : toIdx);
+      const newIdx    = reordered.findIndex(t => t.id === taskId);
+      position = midpoint(
+        newIdx > 0                     ? Number(reordered[newIdx - 1].position) : null,
+        newIdx < reordered.length - 1  ? Number(reordered[newIdx + 1].position) : null,
+      );
+    } else {
+      // Cross-group — drop before the over-task, or at end of target group
+      if (overIsGroup) {
+        const last = targetGroup.tasks[targetGroup.tasks.length - 1];
+        position = midpoint(last ? Number(last.position) : null, null);
+      } else {
+        const overIdx = targetGroup.tasks.findIndex(t => t.id === (over.id as string));
+        const prev    = overIdx > 0 ? targetGroup.tasks[overIdx - 1] : null;
+        const curr    = targetGroup.tasks[overIdx];
+        position = midpoint(prev ? Number(prev.position) : null, curr ? Number(curr.position) : null);
+      }
+    }
+
+    // Optimistic: move task in local state so UI updates immediately after drop
+    setTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      if (!task) return prev;
+      const updated: TaskWithClient = {
+        ...task, position,
+        ...(gUpdate?.field === 'status'    ? { status:    gUpdate.value as TaskStatus } : {}),
+        ...(gUpdate?.field === 'type'      ? { type:      gUpdate.value as TaskType   } : {}),
+        ...(gUpdate?.field === 'client_id' ? { client_id: gUpdate.value               } : {}),
+      };
+      return [...prev.filter(t => t.id !== taskId), updated];
+    });
 
     startTransition(async () => {
       const { error } = await updateTaskPosition(taskId, position, gUpdate);
@@ -401,25 +405,8 @@ export function TasksGrouped({
     });
   }, [clients, router]);
 
-  const groupByOptions = [
-    { value: 'status', label: FILTER.groupByStatus },
-    { value: 'client', label: FILTER.groupByClient },
-    { value: 'type',   label: FILTER.groupByType   },
-    { value: 'none',   label: FILTER.groupByNone   },
-  ];
-
   return (
     <>
-      <Group gap="sm" mb="sm">
-        <Text size="xs" c="dimmed" fw={500}>{FILTER.groupBy}</Text>
-        <SegmentedControl
-          size="xs"
-          value={groupBy}
-          onChange={v => handleGroupByChange(v as GroupBy)}
-          data={groupByOptions}
-        />
-      </Group>
-
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
