@@ -1,6 +1,7 @@
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSettings } from "@/lib/dal";
-import { PageHeader } from "@/components/ui";
+import { PageHeader, TableSkeleton } from "@/components/ui";
 import { currentMonth, monthRange } from "@/lib/format";
 import type { Client, TaskWithClient } from "@/lib/types";
 import { TasksView } from "./tasks-view";
@@ -8,11 +9,26 @@ import { TasksView } from "./tasks-view";
 type SP = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-export default async function TasksPage({
+// Shell renders instantly — Suspense streams in the data.
+export default function TasksPage({
   searchParams,
 }: {
   searchParams: Promise<SP>;
 }) {
+  return (
+    <>
+      <PageHeader
+        title="Tasks"
+        subtitle="Ghi nhận công việc, tính tiền on-demand và export báo cáo."
+      />
+      <Suspense fallback={<TableSkeleton rows={7} />}>
+        <TasksLoader searchParams={searchParams} />
+      </Suspense>
+    </>
+  );
+}
+
+async function TasksLoader({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
   const month = one(sp.month) || currentMonth();
   const type = one(sp.type) || "all";
@@ -50,17 +66,11 @@ export default async function TasksPage({
   const clients = (clientRows ?? []) as Client[];
 
   return (
-    <>
-      <PageHeader
-        title="Tasks"
-        subtitle="Ghi nhận công việc, tính tiền on-demand và export báo cáo."
-      />
-      <TasksView
-        tasks={tasks}
-        clients={clients}
-        currency={settings.currency}
-        filters={{ month, type, client, status, q }}
-      />
-    </>
+    <TasksView
+      tasks={tasks}
+      clients={clients}
+      currency={settings.currency}
+      filters={{ month, type, client, status, q }}
+    />
   );
 }
