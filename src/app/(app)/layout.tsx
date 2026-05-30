@@ -1,4 +1,4 @@
-import { AppShell } from '@mantine/core';
+import { AppShell, AppShellNavbar, AppShellMain } from '@mantine/core';
 import { requireUser } from '@/lib/dal';
 import { Sidebar } from '@/components/sidebar';
 
@@ -11,14 +11,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       padding="lg"
       style={{ background: 'var(--mantine-color-gray-0)' }}
     >
-      <AppShell.Navbar>
+      <AppShellNavbar>
         <Sidebar email={user.email ?? ''} />
-      </AppShell.Navbar>
-      <AppShell.Main>
+      </AppShellNavbar>
+      <AppShellMain>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           {children}
         </div>
-      </AppShell.Main>
+      </AppShellMain>
     </AppShell>
   );
 }
