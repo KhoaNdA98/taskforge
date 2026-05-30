@@ -71,8 +71,9 @@ export function ClientsView({
         </Card>
       ) : (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {clients.map((c) => (
-            <Card key={c.id} className="tf-rise flex flex-col p-4">
+          {clients.map((c, i) => (
+            <Card key={c.id} className="tf-rise tf-scan-wrap flex flex-col p-4"
+              style={{ animationDelay: `${i * 60}ms` }}>
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-fg">{c.name}</p>
                 <div className="flex gap-1">

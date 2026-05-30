@@ -37,7 +37,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dotted grid + radial glow backdrop for the "technical AI console" vibe */
+/* ── Backdrop ──────────────────────────────────────────────────────────── */
 .tf-backdrop {
   background-color: var(--color-base);
   background-image:
@@ -48,34 +48,108 @@ body {
   background-position: 0 0, 0 0, -1px -1px;
 }
 
-/* Thin technical scrollbars */
+/* ── Scrollbars ────────────────────────────────────────────────────────── */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
-*::-webkit-scrollbar {
-  width: 9px;
-  height: 9px;
-}
+*::-webkit-scrollbar { width: 9px; height: 9px; }
 *::-webkit-scrollbar-thumb {
   background: var(--color-border);
   border-radius: 9999px;
 }
-*::-webkit-scrollbar-thumb:hover {
-  background: #313643;
-}
+*::-webkit-scrollbar-thumb:hover { background: #313643; }
 
-/* Subtle entrance for panels */
-@keyframes tf-rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.tf-rise {
-  animation: tf-rise 0.35s ease both;
-}
-
-/* Focus ring helper */
+/* ── Focus ring ────────────────────────────────────────────────────────── */
 .tf-ring:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 1px var(--color-base), 0 0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent);
+  box-shadow: 0 0 0 1px var(--color-base),
+              0 0 0 3px color-mix(in srgb, var(--color-accent) 55%, transparent);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Panel entrance — fade + rise */
+@keyframes tf-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.tf-rise { animation: tf-rise 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Staggered children — apply .tf-stagger to parent, each child gets delay via --i */
+.tf-stagger > * {
+  animation: tf-rise 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+
+/* Shimmer skeleton */
+@keyframes tf-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.tf-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-panel-2) 25%,
+    color-mix(in srgb, var(--color-border) 80%, transparent) 50%,
+    var(--color-panel-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: tf-shimmer 1.6s ease-in-out infinite;
+}
+
+/* Count-up number pop */
+@keyframes tf-pop {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.92); }
+  60%  { transform: translateY(-2px) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tf-pop { animation: tf-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Brand logo ambient glow pulse */
+@keyframes tf-glow {
+  0%, 100% { box-shadow: 0 0 8px 0 rgba(124,108,255,0.15); }
+  50%       { box-shadow: 0 0 18px 4px rgba(124,108,255,0.35); }
+}
+.tf-glow { animation: tf-glow 3s ease-in-out infinite; }
+
+/* Horizontal scan line sweep across a panel */
+@keyframes tf-scan {
+  0%   { top: 0%; opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+.tf-scan-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.tf-scan-wrap::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-accent) 40%, transparent),
+    transparent
+  );
+  animation: tf-scan 4s linear infinite;
+  pointer-events: none;
+}
+
+/* Blinking terminal cursor */
+@keyframes tf-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.tf-cursor::after {
+  content: '▋';
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.75em;
+  color: var(--color-accent);
+  animation: tf-blink 1s step-end infinite;
 }

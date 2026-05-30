@@ -27,12 +27,12 @@ export function Sidebar({ email }: { email: string }) {
     <aside className="flex shrink-0 flex-col border-border bg-panel/60 backdrop-blur-sm md:h-dvh md:w-60 md:border-r">
       {/* Brand */}
       <div className="flex items-center gap-2.5 px-5 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-accent/30 bg-accent-soft text-accent-fg">
+        <div className="tf-glow flex h-8 w-8 items-center justify-center rounded-lg border border-accent/30 bg-accent-soft text-accent-fg transition-transform duration-200 hover:scale-110">
           <Hexagon size={18} />
         </div>
         <div className="leading-tight">
           <p className="text-sm font-semibold tracking-tight">
-            Task<span className="text-accent-fg">Forge</span>
+            Task<span className="text-accent-fg tf-cursor">Forge</span>
           </p>
           <p className="font-mono text-[10px] text-muted">v1.0 · console</p>
         </div>
@@ -40,20 +40,35 @@ export function Sidebar({ email }: { email: string }) {
 
       {/* Nav */}
       <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:overflow-visible md:pb-0">
-        {NAV.map(({ href, label, icon: Icon }) => {
+        {NAV.map(({ href, label, icon: Icon }, i) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
               href={href}
+              style={{ animationDelay: `${i * 60}ms` }}
               className={cn(
-                "tf-ring flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "tf-rise tf-ring group relative flex items-center gap-2.5 rounded-lg py-2 pl-3 pr-3 text-sm font-medium",
+                "transition-all duration-200",
                 active
-                  ? "bg-accent-soft text-accent-fg shadow-[inset_0_0_0_1px_rgba(124,108,255,0.3)]"
+                  ? "bg-accent-soft text-accent-fg"
                   : "text-muted hover:bg-panel-2 hover:text-fg",
               )}
             >
-              <Icon size={17} />
+              {/* Left border indicator */}
+              <span
+                className={cn(
+                  "absolute left-0 top-1/2 -translate-y-1/2 w-0.5 rounded-full bg-accent transition-all duration-300",
+                  active ? "h-5 opacity-100" : "h-0 opacity-0",
+                )}
+              />
+              <Icon
+                size={17}
+                className={cn(
+                  "transition-transform duration-200",
+                  active ? "text-accent-fg" : "group-hover:scale-110",
+                )}
+              />
               {label}
             </Link>
           );
@@ -68,9 +83,9 @@ export function Sidebar({ email }: { email: string }) {
         <form action={signOut}>
           <button
             type="submit"
-            className="tf-ring flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted transition-colors hover:bg-rose/10 hover:text-rose"
+            className="tf-ring group flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted transition-all duration-200 hover:bg-rose/10 hover:text-rose"
           >
-            <LogOut size={17} />
+            <LogOut size={17} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
             Đăng xuất
           </button>
         </form>

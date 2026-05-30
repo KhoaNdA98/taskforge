@@ -259,10 +259,14 @@ export function TasksView({
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((t) => (
+                {tasks.map((t, i) => (
                   <tr
                     key={t.id}
                     className="group border-b border-border-soft last:border-0 hover:bg-panel-2/50"
+                    style={{
+                      animation: "tf-rise 0.28s cubic-bezier(0.16,1,0.3,1) both",
+                      animationDelay: `${Math.min(i * 35, 350)}ms`,
+                    }}
                   >
                     <td className="whitespace-nowrap px-4 py-3 font-mono text-xs text-muted">
                       {formatDate(t.task_date)}

@@ -11,9 +11,9 @@ import {
   StatCardsSkeleton,
   TableSkeleton,
 } from "@/components/ui";
+import { CountUpMoney, CountUpHours } from "@/components/count-up";
 import {
   formatMoney,
-  formatHours,
   formatDate,
   currentMonth,
   monthRange,
@@ -106,44 +106,30 @@ async function DashboardStats({ month }: { month: string }) {
   const total = onDemandRevenue + retainerRevenue;
 
   const stats = [
-    {
-      icon: Clock,
-      label: "Giờ on-demand",
-      value: formatHours(onDemandHours),
-      tone: "text-fg",
-    },
-    {
-      icon: Wallet,
-      label: "Doanh thu on-demand",
-      value: formatMoney(onDemandRevenue, cur),
-      tone: "text-teal",
-    },
-    {
-      icon: Repeat,
-      label: "Retainer (maintain)",
-      value: formatMoney(retainerRevenue, cur),
-      tone: "text-accent-fg",
-    },
-    {
-      icon: Coins,
-      label: "Tổng doanh thu",
-      value: formatMoney(total, cur),
-      tone: "text-fg",
-    },
+    { icon: Clock,  label: "Giờ on-demand",       tone: "text-fg",        kind: "hours"  as const, raw: onDemandHours    },
+    { icon: Wallet, label: "Doanh thu on-demand",  tone: "text-teal",      kind: "money"  as const, raw: onDemandRevenue  },
+    { icon: Repeat, label: "Retainer (maintain)",  tone: "text-accent-fg", kind: "money"  as const, raw: retainerRevenue  },
+    { icon: Coins,  label: "Tổng doanh thu",       tone: "text-fg",        kind: "money"  as const, raw: total            },
   ];
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map(({ icon: Icon, label, value, tone }) => (
-        <Card key={label} className="tf-rise p-4">
+      {stats.map(({ icon: Icon, label, tone, kind, raw }, i) => (
+        <Card key={label}
+          className="tf-rise tf-scan-wrap p-4"
+          style={{ animationDelay: `${i * 60}ms` }}
+        >
           <div className="flex items-center gap-2 text-muted">
             <Icon size={16} />
             <span className="font-mono text-[11px] uppercase tracking-wider">
               {label}
             </span>
           </div>
-          <p className={`mt-3 text-2xl font-semibold tracking-tight ${tone}`}>
-            {value}
+          <p className={`tf-pop mt-3 text-2xl font-semibold tracking-tight ${tone}`}
+            style={{ animationDelay: `${i * 60 + 100}ms` }}>
+            {kind === "hours"
+              ? <CountUpHours hours={raw} />
+              : <CountUpMoney amount={raw} currency={cur} />}
           </p>
         </Card>
       ))}

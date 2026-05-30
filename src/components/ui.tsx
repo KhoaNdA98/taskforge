@@ -197,15 +197,8 @@ export function EmptyState({
 }
 
 /* ── Skeleton ────────────────────────────────────────────────────────── */
-function Pulse({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-panel-2",
-        className,
-      )}
-    />
-  );
+function Shimmer({ className }: { className?: string }) {
+  return <div className={cn("tf-shimmer rounded-md", className)} />;
 }
 
 export function StatCardsSkeleton() {
@@ -213,8 +206,8 @@ export function StatCardsSkeleton() {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: 4 }).map((_, i) => (
         <Card key={i} className="p-4">
-          <Pulse className="h-4 w-24" />
-          <Pulse className="mt-4 h-8 w-32" />
+          <Shimmer className="h-3 w-28" />
+          <Shimmer className="mt-4 h-8 w-36" />
         </Card>
       ))}
     </div>
@@ -223,17 +216,18 @@ export function StatCardsSkeleton() {
 
 export function TableSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden tf-scan-wrap">
       <div className="border-b border-border px-4 py-3">
-        <Pulse className="h-4 w-40" />
+        <Shimmer className="h-3 w-40" />
       </div>
       <div className="divide-y divide-border-soft">
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3">
-            <Pulse className="h-3 w-20 shrink-0" />
-            <Pulse className="h-4 flex-1" />
-            <Pulse className="h-5 w-16 shrink-0 rounded-full" />
-            <Pulse className="h-3 w-24 shrink-0" />
+          <div key={i} className="flex items-center gap-4 px-4 py-3"
+            style={{ opacity: 1 - i * 0.08 }}>
+            <Shimmer className="h-3 w-20 shrink-0" />
+            <Shimmer className="h-3 flex-1" />
+            <Shimmer className="h-5 w-16 shrink-0 rounded-full" />
+            <Shimmer className="h-3 w-24 shrink-0" />
           </div>
         ))}
       </div>
