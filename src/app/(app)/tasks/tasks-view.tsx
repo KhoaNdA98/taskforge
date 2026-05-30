@@ -1,19 +1,16 @@
 "use client";
 
-import { useActionState, useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Plus, Download, Search, LayoutList, Table2 } from "lucide-react";
+import { Plus, Download, Search, Layers, Table2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Button, Input, Select, Card, EmptyState } from "@/components/ui";
+import { Button, Input, Select, Card } from "@/components/ui";
 import { Modal } from "@/components/modal";
-import { useToast } from "@/components/toast";
-import { useConfirm } from "@/components/confirm-dialog";
-import { formatMoney, formatHours, monthLabel } from "@/lib/format";
+import { formatMoney, formatHours } from "@/lib/format";
 import { exportTasksToExcel } from "@/lib/export";
 import { TASK, FILTER, UI } from "@/lib/strings";
-import { deleteTask } from "./actions";
 import { TasksTable } from "./tasks-table";
-import { TasksList } from "./tasks-list";
+import { TasksGrouped } from "./tasks-grouped";
 import { TasksForm } from "./tasks-form";
 import type { Client, TaskWithClient } from "@/lib/types";
 
@@ -24,7 +21,7 @@ type ViewMode = "table" | "list";
 function ViewToggle({ value, onChange }: { value: ViewMode; onChange: (v: ViewMode) => void }) {
   const options: { v: ViewMode; icon: React.ReactNode; label: string }[] = [
     { v: "table", icon: <Table2  size={15} />, label: "Table" },
-    { v: "list",  icon: <LayoutList size={15} />, label: "List"  },
+    { v: "list",  icon: <Layers  size={15} />, label: "List"  },
   ];
   return (
     <div className="relative flex items-center rounded-xl border border-border bg-panel-2 p-1 gap-0.5">
@@ -65,13 +62,10 @@ export function TasksView({
 }) {
   const router   = useRouter();
   const pathname = usePathname();
-  const toast    = useToast();
-  const { confirm } = useConfirm();
 
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [open, setOpen]         = useState(false);
   const [nonce, setNonce]       = useState(0);
-  const [,  startTransition]    = useTransition();
   const [search, setSearch]     = useState(filters.q);
 
   function setParam(key: string, value: string) {
@@ -177,7 +171,7 @@ export function TasksView({
           {viewMode === "table" ? (
             <TasksTable tasks={tasks} clients={clients} currency={currency} />
           ) : (
-            <TasksList tasks={tasks} clients={clients} currency={currency} filters={filters} />
+            <TasksGrouped tasks={tasks} clients={clients} currency={currency} />
           )}
         </motion.div>
       </AnimatePresence>

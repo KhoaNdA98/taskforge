@@ -29,6 +29,7 @@ export interface Task {
   hours: number | null;
   rate_snapshot: number;
   amount: number;
+  position: number | null;
   note: string | null;
   created_at: string;
 }

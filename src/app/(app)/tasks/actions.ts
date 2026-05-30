@@ -105,6 +105,25 @@ export async function quickAddTask(
   return { id: data.id };
 }
 
+/**
+ * Update position (for reorder) and optionally a group field (cross-group drop).
+ * No revalidatePath — caller manages optimistic state; dashboard refreshes via tag.
+ */
+export async function updateTaskPosition(
+  id: string,
+  position: number,
+  groupUpdate?: { field: "status" | "client_id" | "type"; value: string | null },
+): Promise<{ error?: string }> {
+  await requireUser();
+  const supabase = await createClient();
+  const updates: Record<string, unknown> = { position };
+  if (groupUpdate) updates[groupUpdate.field] = groupUpdate.value;
+  const { error } = await supabase.from("tasks").update(updates).eq("id", id);
+  if (error) return { error: error.message };
+  revalidatePath("/dashboard");
+  return {};
+}
+
 export async function deleteTask(id: string): Promise<void> {
   await requireUser();
   const supabase = await createClient();
