@@ -1,5 +1,7 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
+
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Settings } from "@/lib/types";
@@ -14,24 +16,36 @@ export const requireUser = cache(async () => {
   return user;
 });
 
-/** Loads the user's settings row, creating a default one if missing. */
+/**
+ * Loads settings, cached for 60s per user.
+ * Settings rarely change so this avoids a Supabase round trip on every page load.
+ * Invalidated on save via revalidatePath("/settings").
+ */
 export const getSettings = cache(async (): Promise<Settings> => {
   const user = await requireUser();
-  const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("settings")
-    .select("*")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const fetchSettings = unstable_cache(
+    async (userId: string): Promise<Settings> => {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("settings")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
 
-  if (data) return data as Settings;
+      if (data) return data as Settings;
 
-  const { data: created } = await supabase
-    .from("settings")
-    .insert({ user_id: user.id, hourly_rate: 0, currency: "VND" })
-    .select("*")
-    .single();
+      const { data: created } = await supabase
+        .from("settings")
+        .insert({ user_id: userId, hourly_rate: 0, currency: "VND" })
+        .select("*")
+        .single();
 
-  return created as Settings;
+      return created as Settings;
+    },
+    ["settings"],
+    { revalidate: 60 },
+  );
+
+  return fetchSettings(user.id);
 });

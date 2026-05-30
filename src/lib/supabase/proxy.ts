@@ -4,8 +4,9 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_PATHS = ["/login", "/auth"];
 
 /**
- * Refreshes the Supabase auth session on every request and guards routes.
- * Runs inside `proxy.ts` (Next.js 16's renamed Middleware).
+ * Refreshes the Supabase auth session cookie and guards routes.
+ * Uses getSession() (reads JWT from cookie — no network call) for the route
+ * guard. The real security check is getUser() inside requireUser() in each page.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -31,23 +32,22 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANT: do not run code between createServerClient and getUser().
+  // getSession() reads the JWT from the cookie — no network round trip.
+  // Actual token validation happens in requireUser() → getUser() per page.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
 
-  // Not logged in and visiting a protected route → send to /login
-  if (!user && !isPublic) {
+  if (!session && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Logged in and visiting /login → send to dashboard
-  if (user && path === "/login") {
+  if (session && path === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
