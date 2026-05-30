@@ -1,51 +1,211 @@
-*, *::before, *::after { box-sizing: border-box; }
+/* ============================================================
+   TASKFORGE — Cyberpixel Design System
+   ============================================================ */
+
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  --bg-deep:       #08080e;
+  --bg-card:       #0e0e18;
+  --bg-card-hover: #131320;
+  --border:        #2d2d3d;
+  --border-glow:   rgba(168,85,247,0.35);
+
+  --purple:  #a855f7;
+  --cyan:    #06b6d4;
+  --green:   #22c55e;
+  --yellow:  #eab308;
+  --red:     #ef4444;
+  --dimmed:  rgba(232,232,240,0.35);
+
+  --shadow-hard: 6px 6px 0px rgba(0,0,0,0.7);
+  --shadow-glow: 8px 8px 0px rgba(168,85,247,0.35);
+
+  --font-px: var(--font-pixel), 'VT323', monospace;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  border-radius: 0 !important;
+}
 
 html { color-scheme: dark; }
 
 body {
   margin: 0;
-  background: #08080E;
-  color: #E8E8F0;
-  font-family: var(--font-pixel), 'VT323', monospace;
+  background: var(--bg-deep);
+  color: #e8e8f0;
+  font-family: var(--font-px);
   font-size: 18px;
   -webkit-font-smoothing: none;
   -moz-osx-font-smoothing: none;
   image-rendering: pixelated;
 }
 
-/* ── Scanlines ──────────────────────────────────────────────────────── */
+/* ── CRT Scanlines ──────────────────────────────────────────── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background: repeating-linear-gradient(
     0deg,
-    transparent,
+    transparent 0px,
     transparent 3px,
-    rgba(0, 0, 0, 0.08) 3px,
-    rgba(0, 0, 0, 0.08) 4px
+    rgba(0,0,0,0.07) 3px,
+    rgba(0,0,0,0.07) 4px
   );
   pointer-events: none;
   z-index: 9998;
 }
 
-/* ── Pixel dot grid ─────────────────────────────────────────────────── */
+/* ── Purple dot grid ───────────────────────────────────────── */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(rgba(139,92,246,0.06) 1px, transparent 1px);
-  background-size: 16px 16px;
+  background-image: radial-gradient(rgba(139,92,246,0.05) 1px, transparent 1px);
+  background-size: 18px 18px;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Scrollbars */
-* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+/* ── Scrollbars ─────────────────────────────────────────────── */
+* { scrollbar-width: thin; scrollbar-color: #2d2d3d transparent; }
 *::-webkit-scrollbar { width: 4px; height: 4px; }
-*::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 0; }
+*::-webkit-scrollbar-thumb { background: #2d2d3d; }
+*::-webkit-scrollbar-thumb:hover { background: var(--purple); }
 
-/* ── Bottom Hotbar dock ─────────────────────────────────────────────── */
+/* ── Mantine overrides: pixel-style inputs & components ─────── */
+.mantine-TextInput-input,
+.mantine-PasswordInput-input,
+.mantine-NumberInput-input,
+.mantine-Textarea-input,
+.mantine-Select-input,
+.mantine-MonthPickerInput-input {
+  background: rgba(0,0,0,0.4) !important;
+  border: 1px solid var(--border) !important;
+  color: #e8e8f0 !important;
+  font-family: var(--font-px) !important;
+  font-size: 16px !important;
+  transition: border-color 0.1s !important;
+}
+.mantine-TextInput-input:focus,
+.mantine-PasswordInput-input:focus,
+.mantine-NumberInput-input:focus,
+.mantine-Textarea-input:focus,
+.mantine-Select-input:focus {
+  border-color: var(--purple) !important;
+  box-shadow: 0 0 0 1px var(--purple) !important;
+}
+.mantine-TextInput-label,
+.mantine-PasswordInput-label,
+.mantine-NumberInput-label,
+.mantine-Textarea-label,
+.mantine-Select-label,
+.mantine-Checkbox-label {
+  color: var(--dimmed) !important;
+  font-family: var(--font-px) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.08em !important;
+}
+
+.mantine-Button-root {
+  font-family: var(--font-px) !important;
+  letter-spacing: 0.08em !important;
+  border: 1px solid var(--border) !important;
+  transition: all 0.1s !important;
+}
+.mantine-Button-root[data-variant='filled'] {
+  background: #7c3aed !important;
+  border-color: var(--purple) !important;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.7) !important;
+}
+.mantine-Button-root[data-variant='filled']:hover {
+  background: #6d28d9 !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+.mantine-Button-root[data-variant='default'] {
+  background: rgba(0,0,0,0.4) !important;
+  color: var(--cyan) !important;
+  border-color: var(--cyan) !important;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.7) !important;
+}
+.mantine-Button-root[data-variant='default']:hover {
+  box-shadow: 0 0 12px rgba(6,182,212,0.4) !important;
+}
+
+/* Mantine Modal pixel style */
+.mantine-Modal-content {
+  background: #0e0e18 !important;
+  border: 2px solid var(--border) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.8) !important;
+}
+.mantine-Modal-header {
+  background: #0e0e18 !important;
+  border-bottom: 1px solid var(--border) !important;
+  padding: 12px 16px !important;
+}
+.mantine-Modal-title {
+  font-family: var(--font-px) !important;
+  font-size: 20px !important;
+  color: var(--purple) !important;
+  letter-spacing: 0.1em !important;
+}
+
+/* Mantine Select dropdown */
+.mantine-Select-dropdown {
+  background: #0e0e18 !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.7) !important;
+}
+.mantine-Select-option {
+  font-family: var(--font-px) !important;
+  font-size: 16px !important;
+}
+.mantine-Select-option:hover,
+.mantine-Select-option[data-combobox-selected] {
+  background: rgba(168,85,247,0.15) !important;
+}
+
+/* Notifications pixel style */
+.mantine-Notifications-notification {
+  background: #0e0e18 !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.6) !important;
+  font-family: var(--font-px) !important;
+}
+
+/* Segmented control */
+.mantine-SegmentedControl-root {
+  background: rgba(0,0,0,0.3) !important;
+  border: 1px solid var(--border) !important;
+  padding: 2px !important;
+}
+.mantine-SegmentedControl-label {
+  font-family: var(--font-px) !important;
+  font-size: 14px !important;
+  letter-spacing: 0.06em !important;
+  color: var(--dimmed) !important;
+}
+.mantine-SegmentedControl-indicator {
+  background: rgba(124,58,237,0.3) !important;
+  border: 1px solid var(--purple) !important;
+}
+
+/* Spotlight */
+.mantine-Spotlight-content {
+  background: #0e0e18 !important;
+  border: 2px solid var(--border) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.8) !important;
+}
+.mantine-Spotlight-action {
+  font-family: var(--font-px) !important;
+}
+.mantine-Spotlight-action:hover {
+  background: rgba(168,85,247,0.1) !important;
+}
+
+/* ── Bottom Hotbar ──────────────────────────────────────────── */
 .tf-hotbar {
   position: fixed;
   bottom: 20px;
@@ -56,104 +216,109 @@ body::after {
   gap: 10px;
   z-index: 100;
   padding: 8px 14px;
-  background: rgba(5, 5, 8, 0.92);
-  border: 2px solid #2d2d3d;
-  box-shadow: 0 0 32px rgba(139, 92, 246, 0.12), 0 8px 24px rgba(0,0,0,0.6);
+  background: rgba(5,5,8,0.95);
+  border: 2px solid var(--border);
+  box-shadow: 0 0 32px rgba(139,92,246,0.15), 0 8px 24px rgba(0,0,0,0.7);
   backdrop-filter: blur(8px);
 }
 
-.tf-kbd {
-  display: inline-flex;
-  align-items: center;
-  font-size: 12px;
-  font-family: inherit;
-  padding: 0 5px;
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.08);
-}
-
-/* ── Pixel icon active pulse ────────────────────────────────────── */
-@keyframes tf-icon-pulse {
-  0%, 100% {
-    border-color: #7C3AED;
-    box-shadow: 0 0 4px rgba(124,58,237,0.6), inset 0 0 4px rgba(124,58,237,0.1);
-  }
-  50% {
-    border-color: #A78BFA;
-    box-shadow: 0 0 10px rgba(167,139,250,0.8), 0 0 20px rgba(167,139,250,0.2), inset 0 0 6px rgba(167,139,250,0.15);
-  }
-}
-
-.tf-icon-box { transition: border-color 0.1s, background 0.1s; }
-.tf-icon-active { animation: tf-icon-pulse 2s ease-in-out infinite; }
-
-/* ── Quest board cards ──────────────────────────────────────────── */
+/* ── Quest Card hover ───────────────────────────────────────── */
 .tf-quest-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+  transition: transform 0.12s ease, box-shadow 0.12s ease,
+              border-color 0.12s ease, opacity 0.12s ease;
 }
-.tf-quest-card--todo:hover, .tf-quest-card--doing:hover {
-  transform: translateY(-4px) translateX(-4px);
-  border-color: #a855f7 !important;
-  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(168,85,247,0.25) inset !important;
+.tf-quest-card--todo:hover {
+  transform: translateY(-3px) translateX(-3px);
+  border-color: var(--purple) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.7),
+              0 0 18px rgba(168,85,247,0.2) inset !important;
 }
 .tf-quest-card--doing:hover {
-  border-color: #eab308 !important;
-  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(234,179,8,0.2) inset !important;
+  transform: translateY(-3px) translateX(-3px);
+  border-color: var(--yellow) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.7),
+              0 0 18px rgba(234,179,8,0.2) inset !important;
 }
-.tf-quest-card--done {
-  opacity: 0.52;
-}
+.tf-quest-card--done { opacity: 0.5; }
 .tf-quest-card--done:hover {
   opacity: 1;
-  transform: translateY(-4px) translateX(-4px);
-  border-color: #22c55e !important;
-  box-shadow: 8px 8px 0px rgba(0,0,0,0.6), 0 0 15px rgba(34,197,94,0.2) inset !important;
+  transform: translateY(-3px) translateX(-3px);
+  border-color: var(--green) !important;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.7),
+              0 0 18px rgba(34,197,94,0.2) inset !important;
 }
-.tf-quest-card-actions {
-  opacity: 0;
-  transition: opacity 0.1s;
-}
-.tf-quest-card:hover .tf-quest-card-actions {
-  opacity: 1;
-}
+.tf-quest-card-actions { opacity: 0; transition: opacity 0.1s; }
+.tf-quest-card:hover .tf-quest-card-actions { opacity: 1; }
 
-/* ── Inventory grid ─────────────────────────────────────────────── */
+/* ── Inventory slot hover ───────────────────────────────────── */
 .tf-inv-slot {
   transition: transform 0.08s ease, box-shadow 0.08s ease;
-  position: relative;
-  z-index: 0;
+  position: relative; z-index: 0;
 }
 .tf-inv-slot:hover {
-  transform: scale(1.06);
+  transform: scale(1.05);
   z-index: 10;
   box-shadow: 0 0 14px rgba(139,92,246,0.35) !important;
 }
 .tf-inv-delete {
-  position: absolute;
-  top: 2px; right: 3px;
+  position: absolute; top: 2px; right: 3px;
   background: none; border: none; cursor: pointer;
-  color: rgba(248,113,113,0);
-  font-size: 14px; line-height: 1; padding: 1px 3px;
-  font-family: inherit; z-index: 3;
+  color: transparent; font-size: 14px; line-height: 1;
+  padding: 1px 3px; font-family: inherit; z-index: 3;
   transition: color 0.1s;
 }
-.tf-inv-slot:hover .tf-inv-delete {
-  color: rgba(248,113,113,0.7);
+.tf-inv-slot:hover .tf-inv-delete { color: rgba(248,113,113,0.7); }
+.tf-inv-delete:hover { color: var(--red) !important; }
+
+/* ── Pixel form field ───────────────────────────────────────── */
+.px-field {
+  display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;
 }
-.tf-inv-delete:hover {
-  color: #F87171 !important;
+.px-field label {
+  font-family: var(--font-px);
+  font-size: 13px; letter-spacing: 0.1em;
+  color: var(--dimmed);
+}
+.px-field input, .px-field textarea, .px-field select {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border);
+  color: #e8e8f0;
+  font-family: var(--font-px);
+  font-size: 17px; padding: 7px 10px;
+  outline: none; width: 100%;
+  transition: border-color 0.1s;
+}
+.px-field input:focus, .px-field textarea:focus {
+  border-color: var(--purple);
+  box-shadow: 0 0 0 1px var(--purple);
 }
 
-.tf-nav-signout { color: rgba(255,255,255,0.32) !important; }
-.tf-nav-signout:hover {
-  color: #F87171 !important;
-  background: rgba(248,113,113,0.08) !important;
+/* ── Pixel button ───────────────────────────────────────────── */
+.px-btn {
+  font-family: var(--font-px);
+  font-size: 16px; letter-spacing: 0.1em;
+  padding: 7px 18px; cursor: pointer;
+  border: 1px solid var(--border);
+  transition: all 0.1s;
 }
+.px-btn--primary {
+  background: #7c3aed; border-color: var(--purple); color: #fff;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.7);
+}
+.px-btn--primary:hover {
+  box-shadow: var(--shadow-glow);
+}
+.px-btn--ghost {
+  background: transparent; color: var(--dimmed);
+}
+.px-btn--ghost:hover { border-color: var(--purple); color: var(--purple); }
+.px-btn--danger {
+  background: transparent; border-color: var(--red); color: var(--red);
+}
+.px-btn--danger:hover { background: rgba(239,68,68,0.1); }
 
-/* ── Pixel glow for accent numbers ─────────────────────────────────── */
-.pixel-val {
-  font-size: 28px;
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
+/* ── Pixel value glow ───────────────────────────────────────── */
+.px-val-purple { color: var(--purple); text-shadow: 0 0 10px rgba(168,85,247,0.5); }
+.px-val-cyan   { color: var(--cyan);   text-shadow: 0 0 10px rgba(6,182,212,0.5);  }
+.px-val-green  { color: var(--green);  text-shadow: 0 0 8px rgba(34,197,94,0.5);   }
+.px-val-yellow { color: var(--yellow); text-shadow: 0 0 8px rgba(234,179,8,0.4);   }

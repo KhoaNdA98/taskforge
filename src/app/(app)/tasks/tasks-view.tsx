@@ -36,7 +36,7 @@ export function TasksView({
   const router   = useRouter();
   const pathname = usePathname();
 
-  const [viewMode, setViewMode] = useState<ViewMode>((['list','grid'].includes(filters.view) ? filters.view : 'table') as ViewMode);
+  const [viewMode, setViewMode] = useState<ViewMode>((['table','list','grid'].includes(filters.view) ? filters.view : 'grid') as ViewMode);
   const [groupBy,  setGroupBy]  = useState<GroupBy>(
     (['status', 'client', 'type', 'none'].includes(filters.group) ? filters.group : 'status') as GroupBy,
   );
@@ -208,29 +208,39 @@ export function TasksView({
           ) : null}
         />
 
-        {/* Active filter chips */}
+        {/* Active filter chips — pixel style */}
         {activeFilters.map(f => (
-          <Badge
+          <span
             key={f.key}
-            variant="light"
-            color="indigo"
-            rightSection={
-              <ActionIcon size={12} variant="transparent" color="indigo" onClick={f.remove}>
-                <X size={10} />
-              </ActionIcon>
-            }
-            style={{ cursor: 'default' }}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+              border: '1px solid rgba(168,85,247,0.4)',
+              background: 'rgba(168,85,247,0.08)',
+              color: '#a855f7',
+              padding: '1px 8px',
+              fontSize: 14, letterSpacing: '0.06em',
+              fontFamily: 'var(--font-pixel), VT323, monospace',
+            }}
           >
             {f.label}
-          </Badge>
+            <button
+              onClick={f.remove}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#a855f7', padding: '0 2px', fontFamily: 'inherit', fontSize: 14 }}
+              aria-label="Remove filter"
+            >×</button>
+          </span>
         ))}
         {activeFilters.length > 1 && (
-          <Text
-            size="xs" c="dimmed" style={{ cursor: 'pointer' }}
+          <button
             onClick={() => { setSearch(''); router.push(`${pathname}?month=${filters.month}&view=${viewMode}&group=${groupBy}`); }}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'rgba(255,255,255,0.3)', fontFamily: 'var(--font-pixel), VT323, monospace',
+              fontSize: 14, letterSpacing: '0.06em', padding: 0,
+            }}
           >
             {FILTER.clearAll}
-          </Text>
+          </button>
         )}
       </Group>
 
