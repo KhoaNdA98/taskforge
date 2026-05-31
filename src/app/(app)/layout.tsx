@@ -8,8 +8,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user     = await requireUser();
   const supabase = await createClient();
 
-  const { data: taskStats } = await supabase
-    .from('tasks').select('status, type, amount');
+  const { data: taskStats } = await supabase.from('tasks').select('status, type, amount');
 
   const total    = taskStats?.length ?? 0;
   const done     = taskStats?.filter(t => t.status === 'done').length ?? 0;
@@ -27,7 +26,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ModalProvider>
-      <div className="min-h-dvh flex flex-col bg-px-bg">
+      <div
+        id="app-shell"
+        className="crt-screen"
+        style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}
+      >
         <PlayerStatsBar
           email={user.email ?? ''}
           level={level}
@@ -36,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           totalRevenue={totalRevenue}
           currency={currency}
         />
-        <main className="flex-1 w-full max-w-[1280px] mx-auto px-6 pt-6 pb-32">
+        <main style={{ flex: 1, width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '24px 24px 140px' }}>
           {children}
         </main>
         <BottomHotbar />

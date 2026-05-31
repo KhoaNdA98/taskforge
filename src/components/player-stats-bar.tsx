@@ -5,62 +5,95 @@ interface Props {
   intellect: number; totalRevenue: number; currency: string;
 }
 
+function getHpColor(pct: number): string {
+  if (pct >= 60) return '#22c55e';
+  if (pct >= 30) return '#eab308';
+  return '#ef4444';
+}
+
 export function PlayerStatsBar({ email, level, strength, totalRevenue, currency }: Props) {
-  const hpColor = strength >= 60 ? '#22c55e' : strength >= 30 ? '#eab308' : '#ef4444';
-  const hpShadow = strength >= 60
-    ? '0 0 6px rgba(34,197,94,0.6)'
-    : strength >= 30
-      ? '0 0 6px rgba(234,179,8,0.5)'
-      : '0 0 6px rgba(239,68,68,0.6)';
+  const hpColor = getHpColor(strength);
 
   return (
     <header
-      id="player-stats-bar"
-      className="sticky top-0 z-50 flex items-center justify-between gap-4 px-5 py-2.5
-                 border-b-2 border-px-border backdrop-blur-sm"
-      style={{ background: 'rgba(5,5,8,0.95)' }}
+      id="stats-header"
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 24px',
+        borderBottom: '2px solid #2d2d3d',
+        background: 'rgba(19,19,28,0.85)',
+        backdropFilter: 'blur(4px)',
+        position: 'sticky', top: 0, zIndex: 50,
+      }}
     >
-      {/* Brand */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <div style={{ width:8,height:8,background:'#7c3aed',flexShrink:0,
-          boxShadow:'0 0 8px #7c3aed,2px 0 0 #a855f7,0 2px 0 #a855f7' }} />
-        <span className="font-pixel text-[22px] text-px-purple tracking-[0.12em]"
-              style={{ textShadow:'0 0 10px rgba(168,85,247,0.5)' }}>
-          TASKFORGE
+      {/* Left: Brand */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          width: 10, height: 10, background: '#7c3aed', flexShrink: 0,
+          boxShadow: '0 0 10px #7c3aed, 3px 0 0 #a855f7, 0 3px 0 #a855f7',
+        }} />
+        <span style={{
+          fontFamily: "'VT323', monospace", fontSize: '28px',
+          color: '#a855f7', textShadow: '0 0 10px rgba(168,85,247,0.5)',
+          letterSpacing: '0.05em',
+        }}>
+          ⚔ TASKFORGE
         </span>
-        <span className="font-pixel text-[13px] text-px-purple/35 tracking-[0.1em]">
-          LVL.{String(level).padStart(2,'0')}
+        <span style={{
+          fontFamily: "'VT323', monospace", fontSize: '14px',
+          color: 'rgba(168,85,247,0.35)', letterSpacing: '0.1em',
+        }}>
+          LVL.{String(level).padStart(2, '0')}
         </span>
       </div>
 
-      {/* HP bar — center */}
-      <div className="flex-1 max-w-xs">
-        <div className="flex justify-between mb-0.5">
-          <span className="font-pixel text-[13px] tracking-[0.06em]" style={{ color: hpColor }}>HP</span>
-          <span className="font-pixel text-[13px]" style={{ color: hpColor }}>{strength}%</span>
+      {/* Center: HP Bar */}
+      <div style={{ flex: 1, maxWidth: '320px', margin: '0 32px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: hpColor, letterSpacing: '0.05em' }}>
+            HP
+          </span>
+          <span style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: hpColor }}>
+            {strength}/100
+          </span>
         </div>
         <div
           role="progressbar" aria-valuenow={strength} aria-valuemin={0} aria-valuemax={100}
           aria-label={`HP: ${strength}%`}
-          className="h-2.5 border border-px-border overflow-hidden relative"
-          style={{ background: '#2d2d3d' }}
+          style={{
+            width: '100%', height: '14px',
+            background: '#2d2d3d',
+            border: '2px solid #3f3f50',
+            overflow: 'hidden', position: 'relative',
+          }}
         >
-          <div className="absolute inset-y-0 left-0 transition-[width] duration-500"
-               style={{ width:`${strength}%`, background: hpColor, boxShadow: hpShadow }} />
+          <div style={{
+            width: `${strength}%`, height: '100%',
+            background: hpColor,
+            boxShadow: `0 0 8px ${hpColor}80`,
+            transition: 'width 0.4s ease',
+          }} />
           {/* Pixel segments */}
-          <div className="absolute inset-0 pointer-events-none"
-               style={{ backgroundImage:'repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(5,5,8,0.5) 8px,rgba(5,5,8,0.5) 9px)' }} />
+          <div style={{
+            position: 'absolute', inset: 0, pointerEvents: 'none',
+            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 9px, rgba(10,10,15,0.4) 9px, rgba(10,10,15,0.4) 10px)',
+          }} />
         </div>
       </div>
 
-      {/* XP + email — right */}
-      <div className="text-right flex-shrink-0">
-        <div className="font-pixel text-[24px] leading-none text-px-cyan"
-             style={{ textShadow:'0 0 10px rgba(6,182,212,0.45)' }}>
+      {/* Right: XP */}
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.08em' }}>
+          MONTHLY XP
+        </div>
+        <div id="xp-counter" style={{
+          fontFamily: "'VT323', monospace", fontSize: '32px',
+          color: '#06b6d4', textShadow: '0 0 10px rgba(6,182,212,0.5)',
+          lineHeight: 1.1,
+        }}>
           +{formatMoney(totalRevenue, currency)} XP
         </div>
-        <div className="text-[11px] text-white/25 mt-0.5 tracking-[0.02em] max-w-[160px]
-                        overflow-hidden text-ellipsis whitespace-nowrap">
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', marginTop: '2px', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {email}
         </div>
       </div>

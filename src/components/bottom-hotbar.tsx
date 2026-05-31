@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useTransition } from 'react';
+import { useCallback, useTransition } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useModal } from '@/components/ui/modal';
@@ -19,49 +19,72 @@ function NavSlot({ hotkey, emoji, label, href, active }: {
   return (
     <Link
       href={href}
-      id={`hotbar-${label.toLowerCase()}`}
+      id={`nav-slot-${label.toLowerCase()}`}
       aria-label={label}
       aria-current={active ? 'page' : undefined}
-      className={`relative w-16 h-16 flex items-center justify-center no-underline
-        border-2 transition-all duration-100 flex-shrink-0
-        ${active
-          ? 'bg-px-purple/15 border-px-purple shadow-[inset_0_2px_0_rgba(168,85,247,0.25),2px_2px_0_rgba(0,0,0,0.6)] translate-y-0.5'
-          : 'bg-px-card border-px-border shadow-hard hover:border-px-purple/50 hover:shadow-hard-purple hover:-translate-y-0.5'
-        }`}
+      style={{
+        position: 'relative',
+        width: '64px', height: '64px',
+        background: active ? 'rgba(168,85,247,0.15)' : '#13131c',
+        border: active ? '2px solid #a855f7' : '2px solid #2d2d3d',
+        boxShadow: active
+          ? 'inset 0 2px 0 rgba(168,85,247,0.3), 2px 2px 0 rgba(0,0,0,0.6)'
+          : '6px 6px 0px 0px rgba(0,0,0,0.6)',
+        transform: active ? 'translateY(2px)' : 'translateY(0)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '28px', textDecoration: 'none',
+        transition: 'all 0.1s ease', cursor: 'pointer', flexShrink: 0,
+      }}
+      onMouseEnter={e => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.borderColor = '#a855f7';
+          (e.currentTarget as HTMLElement).style.boxShadow = '8px 8px 0px 0px rgba(168,85,247,0.4)';
+        }
+      }}
+      onMouseLeave={e => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.borderColor = '#2d2d3d';
+          (e.currentTarget as HTMLElement).style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,0.6)';
+        }
+      }}
     >
-      <span className={`absolute top-1 left-1.5 font-pixel text-[13px] leading-none
-        ${active ? 'text-px-purple' : 'text-white/25'}`}>{hotkey}</span>
-      <span role="img" aria-hidden className="text-[26px] leading-none">{emoji}</span>
-      <span className={`absolute -bottom-5 left-1/2 -translate-x-1/2 font-pixel text-[12px]
-        whitespace-nowrap tracking-[0.06em]
-        ${active ? 'text-px-purple' : 'text-white/25'}`}>
-        {label.toUpperCase()}
+      <span style={{ position: 'absolute', top: '3px', left: '5px', fontFamily: "'VT323', monospace", fontSize: '14px', color: active ? '#a855f7' : '#6b7280', lineHeight: 1 }}>
+        {hotkey}
+      </span>
+      <span role="img" aria-hidden style={{ lineHeight: 1 }}>{emoji}</span>
+      <span style={{ position: 'absolute', bottom: '-20px', left: '50%', transform: 'translateX(-50%)', fontFamily: "'VT323', monospace", fontSize: '13px', color: active ? '#a855f7' : '#6b7280', whiteSpace: 'nowrap', letterSpacing: '0.05em' }}>
+        {label}
       </span>
     </Link>
   );
 }
 
-function ActionSlot({ hotkey, emoji, label, onClick, danger = false }: {
-  hotkey: string; emoji: string; label: string; onClick: () => void; danger?: boolean;
-}) {
-  const accent = danger ? 'px-red' : 'px-cyan';
+function ExitSlot({ onClick }: { onClick: () => void }) {
   return (
     <button
-      id={`hotbar-${label.toLowerCase().replace(/\s/g, '-')}`}
-      aria-label={label}
+      id="nav-slot-exit"
+      aria-label="Exit"
       onClick={onClick}
-      className={`relative w-16 h-16 flex items-center justify-center
-        bg-px-card border-2 border-px-border shadow-hard
-        transition-all duration-100 cursor-pointer p-0 flex-shrink-0
-        hover:border-${accent} hover:shadow-hard`}
+      style={{
+        position: 'relative', width: '64px', height: '64px',
+        background: '#13131c', border: '2px solid #2d2d3d',
+        boxShadow: '6px 6px 0px 0px rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '28px', cursor: 'pointer', flexShrink: 0,
+        transition: 'all 0.1s ease', outline: 'none', padding: 0,
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLButtonElement).style.borderColor = '#ef4444';
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '8px 8px 0px 0px rgba(239,68,68,0.3)';
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLButtonElement).style.borderColor = '#2d2d3d';
+        (e.currentTarget as HTMLButtonElement).style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,0.6)';
+      }}
     >
-      <span className="absolute top-1 left-1.5 font-pixel text-[13px] leading-none text-white/25">
-        {hotkey}
-      </span>
-      <span role="img" aria-hidden className="text-[26px] leading-none">{emoji}</span>
-      <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 font-pixel text-[12px] whitespace-nowrap tracking-[0.06em] text-white/25">
-        {label.toUpperCase()}
-      </span>
+      <span style={{ position: 'absolute', top: '3px', left: '5px', fontFamily: "'VT323', monospace", fontSize: '14px', color: '#6b7280', lineHeight: 1 }}>0</span>
+      <span role="img" aria-hidden style={{ lineHeight: 1 }}>🚪</span>
+      <span style={{ position: 'absolute', bottom: '-20px', left: '50%', transform: 'translateX(-50%)', fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', whiteSpace: 'nowrap', letterSpacing: '0.05em' }}>Exit</span>
     </button>
   );
 }
@@ -75,13 +98,10 @@ export function BottomHotbar() {
     open({
       title: '// QUIT_GAME.exe',
       content: (
-        <div className="space-y-2">
-          <p className="font-pixel text-px-yellow text-[16px] tracking-[0.06em]">WARNING</p>
-          <p className="font-pixel text-white/60 text-[16px] leading-relaxed">
+        <div>
+          <p style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: '#eab308', marginBottom: '8px' }}>WARNING</p>
+          <p style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
             Your progress has been auto-saved.<br />Exit this world?
-          </p>
-          <p className="font-pixel text-white/25 text-[13px] tracking-[0.04em]">
-            {'// session will be terminated'}
           </p>
         </div>
       ),
@@ -93,13 +113,24 @@ export function BottomHotbar() {
   }, [open, startTransition]);
 
   return (
-    <nav aria-label="Game Navigation" className="px-hotbar mb-6">
+    <nav
+      aria-label="Game Navigation"
+      style={{
+        position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', gap: '12px', zIndex: 100,
+        padding: '8px 16px',
+        background: 'rgba(10,10,15,0.9)',
+        border: '2px solid #2d2d3d',
+        boxShadow: '0 0 24px rgba(168,85,247,0.15)',
+        backdropFilter: 'blur(4px)',
+      }}
+    >
       {NAV_SLOTS.map(slot => {
         const active = pathname === slot.href || pathname.startsWith(slot.href + '/');
         return <NavSlot key={slot.id} {...slot} active={active} />;
       })}
-      <div className="w-0.5 h-10 bg-px-border self-center flex-shrink-0" />
-      <ActionSlot hotkey="0" emoji="🚪" label="Exit" onClick={handleExit} danger />
+      <div style={{ width: '1px', background: '#2d2d3d', alignSelf: 'center', height: '40px', flexShrink: 0 }} />
+      <ExitSlot onClick={handleExit} />
     </nav>
   );
 }
