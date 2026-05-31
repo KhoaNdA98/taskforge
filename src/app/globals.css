@@ -1,6 +1,7 @@
 /* Tailwind v4 */
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=VT323&display=swap');
+@import "tailwindcss";
+
 
 /* ── Golden Arcade Theme ─────────────────────────────── */
 @theme {
@@ -41,7 +42,6 @@
   --bg-deep-space:   #1a1a1a;
   --bg-card-pixel:   #232323;
   --border-pixel:    #3d3020;
-  --neon-purple:     #ff914d;
   --neon-cyan:       #ffde59;
   --pixel-green:     #6fcf5a;
   --pixel-yellow:    #ffde59;
@@ -226,3 +226,15 @@ a { text-decoration: none; }
 
 /* ── Global font-pixel boosters ──────────────────────── */
 .font-pixel { font-family: var(--font-pixel) !important; }
+
+/* ── Pixel Floating Animation ────────────────────────── */
+@keyframes pixel-float-up {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100vh); }
+}
+.animate-pixel-slow {
+  animation: pixel-float-up 20s linear infinite;
+}
+.animate-pixel-fast {
+  animation: pixel-float-up 12s linear infinite;
+}

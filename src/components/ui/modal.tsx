@@ -48,7 +48,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                 </button>
                 <button
                   onClick={() => { opts.onConfirm?.(); close(); }}
-                  style={{ fontFamily: "'VT323', monospace", fontSize: '19px', letterSpacing: '0.1em', padding: '6px 16px', cursor: 'pointer', border: opts.danger ? '1px solid rgba(239,68,68,0.5)' : '1px solid #a855f7', background: opts.danger ? 'rgba(239,68,68,0.1)' : '#7c3aed', color: opts.danger ? '#ef4444' : '#fff', boxShadow: opts.danger ? 'none' : '3px 3px 0 rgba(0,0,0,0.6)' }}
+                  style={{ fontFamily: "'VT323', monospace", fontSize: '19px', letterSpacing: '0.1em', padding: '6px 16px', cursor: 'pointer', border: opts.danger ? '1px solid rgba(239,68,68,0.5)' : '1px solid #111111', background: opts.danger ? 'rgba(239,68,68,0.1)' : '#ff914d', color: opts.danger ? '#ef4444' : '#111111', boxShadow: opts.danger ? 'none' : '3px 3px 0 rgba(0,0,0,0.6)' }}
                 >
                   {opts.confirmLabel ?? '[ CONFIRM ]'}
                 </button>

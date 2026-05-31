@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { BottomHotbar } from '@/components/bottom-hotbar';
 import { PlayerStatsBar } from '@/components/player-stats-bar';
 import { ModalProvider } from '@/components/ui/modal';
+import { PixelBackground } from '@/components/pixel-background';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user     = await requireUser();
@@ -26,10 +27,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <ModalProvider>
+      <PixelBackground />
       <div
         id="app-shell"
         className="crt-screen"
-        style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#1a1a1a' }}
+        style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent' }}
       >
         <PlayerStatsBar
           email={user.email ?? ''}

@@ -12,13 +12,13 @@ import { formatMoney, formatDate } from '@/lib/format';
 
 // ── Golden Arcade palette per status ──────────────────────────────────────
 const STATUS_COLOR: Record<TaskStatus, string> = {
-  todo:   '#a78bfa',  // soft purple for backlog
+  todo:   '#3b82f6',  // retro blue for backlog
   doing:  '#ff914d',  // arcade orange for WIP
   review: '#ffde59',  // gold for review
   done:   '#6fcf5a',  // warm green for done
 };
 const STATUS_BG: Record<TaskStatus, string> = {
-  todo:   'rgba(167,139,250,0.08)',
+  todo:   'rgba(59,130,246,0.08)',
   doing:  'rgba(255,145,77,0.08)',
   review: 'rgba(255,222,89,0.08)',
   done:   'rgba(111,207,90,0.08)',

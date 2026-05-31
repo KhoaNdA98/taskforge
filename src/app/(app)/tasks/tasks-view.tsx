@@ -91,7 +91,7 @@ export function TasksView({ tasks, clients, currency, filters }: {
           <button className="px-btn px-btn-cyan" onClick={() => exportTasksToExcel(tasks, clients, currency, filters.month)} disabled={tasks.length === 0}>
             ↓ EXPORT
           </button>
-          <button id="add-task-btn" className="px-btn px-btn-primary" onClick={openAdd}>
+          <button id="add-task-btn" className="px-btn bg-arcade-orange text-border-dark" onClick={openAdd}>
             + NEW QUEST
           </button>
         </div>

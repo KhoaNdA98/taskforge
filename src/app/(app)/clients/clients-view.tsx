@@ -12,7 +12,7 @@ import { saveClient, deleteClient } from './actions';
 function ClientCard({ client, currency, onEdit, onDelete }: {
   client: Client; currency: string; onEdit: () => void; onDelete: () => void;
 }) {
-  const sc = client.is_maintain_active ? '#a855f7' : '#2d2d3d';
+  const sc = client.is_maintain_active ? '#ff914d' : '#2d2d3d';
   return (
     <div
       className="relative flex flex-col gap-3 p-4 bg-px-card border-2 cursor-pointer
@@ -23,7 +23,7 @@ function ClientCard({ client, currency, onEdit, onDelete }: {
       {/* Actions */}
       <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <button onClick={e => { e.stopPropagation(); onEdit(); }}
-          className="font-pixel text-[13px] px-2 py-0.5 border border-px-purple/40 text-px-purple bg-px-purple/10"
+          className="font-pixel text-[13px] px-2 py-0.5 border border-arcade-orange/40 text-arcade-orange bg-arcade-orange/10"
         >EDIT</button>
         <button onClick={e => { e.stopPropagation(); onDelete(); }}
           className="font-pixel text-[13px] px-2 py-0.5 border border-px-red/40 text-px-red bg-px-red/10"
@@ -37,14 +37,14 @@ function ClientCard({ client, currency, onEdit, onDelete }: {
 
       {/* Status */}
       <span className="font-pixel text-[13px] tracking-[0.08em] px-2 py-0.5 border self-start"
-            style={{ color: sc, borderColor: sc + '80', background: client.is_maintain_active ? 'rgba(168,85,247,0.1)' : 'transparent' }}>
+            style={{ color: sc, borderColor: sc + '80', background: client.is_maintain_active ? 'rgba(255,145,77,0.1)' : 'transparent' }}>
         {client.is_maintain_active ? '●MAINTAIN ACTIVE' : '○NO MAINTAIN'}
       </span>
 
       {/* Retainer */}
       <div className="flex justify-between items-baseline mt-auto">
         <span className="font-pixel text-[13px] text-white/30 tracking-[0.08em]">RETAINER/MO</span>
-        <span className="font-pixel text-[22px]" style={{ color: sc, textShadow: client.is_maintain_active ? '0 0 10px rgba(168,85,247,0.4)' : 'none' }}>
+        <span className="font-pixel text-[22px]" style={{ color: sc, textShadow: client.is_maintain_active ? '0 0 10px rgba(255,145,77,0.4)' : 'none' }}>
           {formatMoney(client.monthly_retainer, currency)}
         </span>
       </div>
@@ -84,7 +84,7 @@ function ClientForm({ client, onDone }: { client: Client | null; onDone: () => v
       </div>
       <label className="flex items-center gap-3 mb-3 cursor-pointer">
         <input name="is_maintain_active" type="checkbox" defaultChecked={client?.is_maintain_active ?? false}
-               className="w-4 h-4 accent-px-purple" />
+               className="w-4 h-4 accent-arcade-orange" />
         <span className="font-pixel text-[16px] text-white/60">Maintain active</span>
       </label>
       <div className="px-field">
@@ -131,7 +131,7 @@ export function ClientsView({ clients, currency }: { clients: Client[]; currency
         <button id="add-client-btn" onClick={openAdd} className="px-btn px-btn-primary">+ ADD MEMBER</button>
       </div>
       {clients.length === 0 ? (
-        <div className="border-2 border-dashed border-px-purple/20 p-16 text-center
+        <div className="border-2 border-dashed border-arcade-orange/20 p-16 text-center
                         font-pixel text-[18px] text-white/20 tracking-[0.08em]">
           {'// NO GUILD MEMBERS YET'}
         </div>

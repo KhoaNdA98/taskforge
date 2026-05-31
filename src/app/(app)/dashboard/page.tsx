@@ -10,9 +10,10 @@ import { type Client, type TaskWithClient } from '@/lib/types';
 import { MonthSelect } from './month-select';
 
 const STATUS_BADGE: Record<string, { label: string; color: string }> = {
-  todo:  { label: 'TODO', color: '#a855f7' },
-  doing: { label: 'WIP',  color: '#eab308' },
-  done:  { label: 'DONE', color: '#22c55e' },
+  todo:   { label: 'TODO',   color: '#3b82f6' },  // retro blue
+  doing:  { label: 'WIP',    color: '#ff914d' },  // arcade orange
+  review: { label: 'REVIEW', color: '#ffde59' },  // gold
+  done:   { label: 'DONE',   color: '#6fcf5a' },  // warm green
 };
 
 function prevMonth(ym: string): string {
@@ -102,9 +103,9 @@ async function DashboardStats({ month }: { month: string }) {
 
   const stats = [
     { label: DASHBOARD.stats.onDemandHours,   accent: 'rgba(255,255,255,0.35)', value: `${onDemandHours}h`                },
-    { label: DASHBOARD.stats.onDemandRevenue, accent: '#22c55e',                value: formatMoney(onDemandRevenue, cur)   },
-    { label: DASHBOARD.stats.retainer,        accent: '#a855f7',                value: formatMoney(retainerRevenue, cur)   },
-    { label: DASHBOARD.stats.total,           accent: '#06b6d4',                value: formatMoney(total, cur)             },
+    { label: DASHBOARD.stats.onDemandRevenue, accent: '#6fcf5a',                value: formatMoney(onDemandRevenue, cur)   },
+    { label: DASHBOARD.stats.retainer,        accent: '#ffde59',                value: formatMoney(retainerRevenue, cur)   },
+    { label: DASHBOARD.stats.total,           accent: '#ff914d',                value: formatMoney(total, cur)             },
   ];
 
   return (
@@ -172,15 +173,15 @@ async function RecentTasks({ month }: { month: string }) {
   const doneCount = tasks.filter(t => t.status === 'done').length;
 
   return (
-    <div className="border border-px-purple/20 bg-black/25 shadow-hard h-full">
-      <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-px-purple/20 bg-px-purple/5">
-        <span className="font-pixel text-[13px] text-px-cyan tracking-[0.12em]">// {DASHBOARD.recentTasks.toUpperCase()}</span>
-        <Link href="/tasks" className="font-pixel text-[13px] text-px-purple no-underline flex items-center gap-1 tracking-[0.06em]">
+    <div className="border border-arcade-orange/20 bg-black/25 shadow-hard h-full">
+      <div className="flex justify-between items-center px-3.5 py-2.5 border-b border-arcade-orange/20 bg-arcade-orange/5">
+        <span className="font-pixel text-[13px] text-gold-accent tracking-[0.12em]">// {DASHBOARD.recentTasks.toUpperCase()}</span>
+        <Link href="/tasks" className="font-pixel text-[13px] text-arcade-orange no-underline flex items-center gap-1 tracking-[0.06em]">
           {DASHBOARD.viewAll} <ArrowRight size={12} />
         </Link>
       </div>
       {/* Table header */}
-      <div className="grid font-pixel text-[11px] tracking-[0.12em] text-px-cyan px-3.5 py-1.5 border-b border-white/5"
+      <div className="grid font-pixel text-[11px] tracking-[0.12em] text-gold-accent px-3.5 py-1.5 border-b border-white/5"
            style={{ gridTemplateColumns: '46px 1fr 80px 92px 80px' }}>
         <span>DATE</span><span>NHIỆM VỤ</span><span>KHÁCH</span>
         <span className="text-right">THƯỞNG</span><span className="text-right">STATUS</span>
@@ -198,7 +199,7 @@ async function RecentTasks({ month }: { month: string }) {
               <span className="font-pixel text-[14px] overflow-hidden text-ellipsis whitespace-nowrap"
                     style={{ color: t.status === 'done' ? 'rgba(255,255,255,0.5)' : '#E8E8F0' }}>{t.name}</span>
               <span className="font-pixel text-[12px] text-white/35 overflow-hidden text-ellipsis whitespace-nowrap">{clientName}</span>
-              <span className="font-pixel text-[13px] text-px-green text-right">
+              <span className="font-pixel text-[13px] text-[#6fcf5a] text-right">
                 {t.type === 'on_demand' ? formatMoney(t.amount, cur) : '——'}
               </span>
               <div className="text-right">
@@ -243,8 +244,8 @@ async function ClientRevenue({ month }: { month: string }) {
   const retainerTotal = clients.filter(c => c.is_maintain_active).reduce((s, c) => s + Number(c.monthly_retainer), 0);
 
   return (
-    <div className="border border-px-purple/20 bg-black/25 shadow-hard h-full p-4">
-      <div className="font-pixel text-[13px] text-px-cyan tracking-[0.12em] mb-3.5 border-b border-white/5 pb-2">
+    <div className="border border-arcade-orange/20 bg-black/25 shadow-hard h-full p-4">
+      <div className="font-pixel text-[13px] text-gold-accent tracking-[0.12em] mb-3.5 border-b border-white/5 pb-2">
         // {DASHBOARD.revenueByClient.toUpperCase()}
       </div>
       {clientRevenue.length === 0 ? (
@@ -254,7 +255,7 @@ async function ClientRevenue({ month }: { month: string }) {
           {clientRevenue.map(c => (
             <div key={c.name} className="flex justify-between items-center">
               <span className="font-pixel text-[15px] text-white/70 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{c.name}</span>
-              <span className="font-pixel text-[14px] text-px-green ml-2">{formatMoney(c.amount, cur)}</span>
+              <span className="font-pixel text-[14px] text-[#6fcf5a] ml-2">{formatMoney(c.amount, cur)}</span>
             </div>
           ))}
         </div>
@@ -262,7 +263,7 @@ async function ClientRevenue({ month }: { month: string }) {
       {retainerTotal > 0 && (
         <div className="flex justify-between items-center mt-4 pt-3 border-t border-white/[0.06]">
           <span className="font-pixel text-[13px] text-white/30">Retainer (maintain)</span>
-          <span className="font-pixel text-[14px] text-px-purple">{formatMoney(retainerTotal, cur)}</span>
+          <span className="font-pixel text-[14px] text-gold-accent">{formatMoney(retainerTotal, cur)}</span>
         </div>
       )}
     </div>
@@ -317,8 +318,8 @@ async function BossStage({ month }: { month: string }) {
             )}
           </div>
           <div className="flex gap-5 font-pixel text-[13px]">
-            <span className="text-px-green">✓ SLAIN: {done}</span>
-            <span className="text-px-yellow">⚔ IN_COMBAT: {doing}</span>
+            <span className="text-[#6fcf5a]">✓ SLAIN: {done}</span>
+            <span className="text-[#ffde59]">⚔ IN_COMBAT: {doing}</span>
             <span className="text-white/35">○ REMAINING: {todo}</span>
           </div>
         </div>
