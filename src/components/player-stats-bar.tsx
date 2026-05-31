@@ -33,14 +33,14 @@ export function PlayerStatsBar({ email, level, strength, totalRevenue, currency 
           boxShadow: '0 0 10px #7c3aed, 3px 0 0 #a855f7, 0 3px 0 #a855f7',
         }} />
         <span style={{
-          fontFamily: "'VT323', monospace", fontSize: '28px',
+          fontFamily: "'VT323', monospace", fontSize: '34px',
           color: '#a855f7', textShadow: '0 0 10px rgba(168,85,247,0.5)',
           letterSpacing: '0.05em',
         }}>
           ⚔ TASKFORGE
         </span>
         <span style={{
-          fontFamily: "'VT323', monospace", fontSize: '14px',
+          fontFamily: "'VT323', monospace", fontSize: '17px',
           color: 'rgba(168,85,247,0.35)', letterSpacing: '0.1em',
         }}>
           LVL.{String(level).padStart(2, '0')}
@@ -50,10 +50,10 @@ export function PlayerStatsBar({ email, level, strength, totalRevenue, currency 
       {/* Center: HP Bar */}
       <div style={{ flex: 1, maxWidth: '320px', margin: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: hpColor, letterSpacing: '0.05em' }}>
+          <span style={{ fontFamily: "'VT323', monospace", fontSize: '18px', color: hpColor, letterSpacing: '0.05em' }}>
             HP
           </span>
-          <span style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: hpColor }}>
+          <span style={{ fontFamily: "'VT323', monospace", fontSize: '18px', color: hpColor }}>
             {strength}/100
           </span>
         </div>
@@ -83,11 +83,11 @@ export function PlayerStatsBar({ email, level, strength, totalRevenue, currency 
 
       {/* Right: XP */}
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.08em' }}>
+        <div style={{ fontFamily: "'VT323', monospace", fontSize: '15px', color: '#6b7280', letterSpacing: '0.08em' }}>
           MONTHLY XP
         </div>
         <div id="xp-counter" style={{
-          fontFamily: "'VT323', monospace", fontSize: '32px',
+          fontFamily: "'VT323', monospace", fontSize: '38px',
           color: '#06b6d4', textShadow: '0 0 10px rgba(6,182,212,0.5)',
           lineHeight: 1.1,
         }}>

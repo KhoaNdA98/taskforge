@@ -50,13 +50,13 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       id={`quest-card-${task.id}`}
       style={{
         background: '#13131c',
-        border: '2px solid #2d2d3d',
-        boxShadow: '6px 6px 0px 0px rgba(0,0,0,0.6)',
+        border: `2px solid ${statusColor}`,
+        boxShadow: `6px 6px 0px 0px rgba(0,0,0,0.6)`,
         padding: '16px',
         display: 'flex',
         flexDirection: 'column',
         gap: '10px',
-        opacity: isDone ? 0.55 : 1,
+        opacity: isDone ? 0.6 : 1,
         transform: 'translateY(0)',
         transition: 'all 0.15s ease',
         cursor: 'pointer',
@@ -67,15 +67,15 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLElement;
         el.style.opacity = '1';
-        el.style.boxShadow = '8px 8px 0px 0px rgba(168,85,247,0.4)';
-        el.style.borderColor = '#a855f7';
+        el.style.boxShadow = `8px 8px 0px 0px ${statusColor}66`;
+        el.style.borderColor = statusColor;
         el.style.transform = 'translateY(-3px)';
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLElement;
-        el.style.opacity = isDone ? '0.55' : '1';
+        el.style.opacity = isDone ? '0.6' : '1';
         el.style.boxShadow = '6px 6px 0px 0px rgba(0,0,0,0.6)';
-        el.style.borderColor = '#2d2d3d';
+        el.style.borderColor = statusColor;
         el.style.transform = 'translateY(0)';
       }}
     >
@@ -121,16 +121,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       </div>
 
       {/* Task name */}
-      <h3 style={{
-        fontFamily: "'VT323', monospace",
-        fontSize: '20px',
-        color: '#e2e8f0',
-        margin: 0,
-        wordWrap: 'break-word',
-        overflowWrap: 'break-word',
-        lineHeight: 1.3,
-        letterSpacing: '0.03em',
-      }}>
+      <h3 style={{ fontFamily: "'VT323', monospace", fontSize: '24px', color: '#e2e8f0', margin: 0, wordWrap: 'break-word', overflowWrap: 'break-word', lineHeight: 1.3, letterSpacing: '0.03em' }}>
         {task.name}
       </h3>
 
@@ -143,7 +134,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
           <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.06em' }}>
             CLIENT
           </div>
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: '17px', color: '#a855f7' }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: '20px', color: '#a855f7' }}>
             {clientName ?? '—'}
           </div>
         </div>
@@ -152,10 +143,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
             <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.06em' }}>
               REWARD
             </div>
-            <div style={{
-              fontFamily: "'VT323', monospace", fontSize: '22px',
-              color: '#06b6d4', textShadow: '0 0 8px rgba(6,182,212,0.4)',
-            }}>
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: '26px', color: '#06b6d4', textShadow: '0 0 8px rgba(6,182,212,0.4)' }}>
               +{formatMoney(task.amount, currency)} XP
             </div>
           </div>
@@ -163,7 +151,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       </div>
 
       {/* Date */}
-      <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#4b5563', letterSpacing: '0.04em' }}>
+      <div style={{ fontFamily: "'VT323', monospace", fontSize: '15px', color: '#4b5563', letterSpacing: '0.04em' }}>
         DATE: {formatDate(task.task_date).slice(0, 10)}
       </div>
     </article>
@@ -212,13 +200,13 @@ export function TasksInventory({ tasks, clients, currency }: {
       {/* Board header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div style={{
-          fontFamily: "'VT323', monospace", fontSize: '24px',
+          fontFamily: "'VT323', monospace", fontSize: '28px',
           color: '#a855f7', letterSpacing: '0.1em',
           textShadow: '0 0 10px rgba(168,85,247,0.45)',
         }}>
           ⚔️ QUEST_BOARD
         </div>
-        <div style={{ display: 'flex', gap: '16px', fontFamily: "'VT323', monospace", fontSize: '14px' }}>
+        <div style={{ display: 'flex', gap: '16px', fontFamily: "'VT323', monospace", fontSize: '17px' }}>
           <span style={{ color: '#22c55e' }}>●DONE&nbsp;{done}</span>
           <span style={{ color: '#eab308' }}>●WIP&nbsp;{doing}</span>
           <span style={{ color: 'rgba(168,85,247,0.8)' }}>●TODO&nbsp;{todo}</span>
