@@ -1,6 +1,17 @@
 /* Tailwind v4 */
 @import "tailwindcss";
 
+/* ── Scale up Tailwind text sizes for VT323 ─────── */
+@theme {
+  --text-xs:   0.875rem;  /* was 0.75 → ~14px */
+  --text-sm:   1rem;      /* was 0.875 → 16px */
+  --text-base: 1.25rem;   /* was 1 → 20px */
+  --text-lg:   1.5rem;    /* was 1.125 → 24px */
+  --text-xl:   1.75rem;   /* was 1.25 → 28px */
+  --text-2xl:  2rem;      /* was 1.5 → 32px */
+  --text-3xl:  2.5rem;    /* was 1.875 → 40px */
+}
+
 /* ── CSS Variables ───────────────────────────── */
 :root {
   --bg-deep-space:   #0a0a0f;
@@ -153,3 +164,25 @@ a { text-decoration: none; }
   from { opacity: 0; transform: translateX(30px); }
   to   { opacity: 1; transform: translateX(0); }
 }
+
+/* ── Global font-pixel scale-up ─────────────── */
+/* VT323 renders small — boost all Tailwind text sizes by ~1.5× */
+.font-pixel { font-size: 20px; }
+.font-pixel.text-\[11px\]   { font-size: 16px !important; }
+.font-pixel.text-\[12px\]   { font-size: 17px !important; }
+.font-pixel.text-\[13px\]   { font-size: 18px !important; }
+.font-pixel.text-\[14px\]   { font-size: 19px !important; }
+.font-pixel.text-\[15px\]   { font-size: 20px !important; }
+.font-pixel.text-\[16px\]   { font-size: 21px !important; }
+.font-pixel.text-\[17px\]   { font-size: 22px !important; }
+.font-pixel.text-\[18px\]   { font-size: 24px !important; }
+.font-pixel.text-\[20px\]   { font-size: 26px !important; }
+.font-pixel.text-\[22px\]   { font-size: 28px !important; }
+.font-pixel.text-\[24px\]   { font-size: 30px !important; }
+.font-pixel.text-\[26px\]   { font-size: 32px !important; }
+.font-pixel.text-\[28px\]   { font-size: 34px !important; }
+.font-pixel.text-\[32px\]   { font-size: 38px !important; }
+.font-pixel.text-\[36px\]   { font-size: 42px !important; }
+
+/* Brighter text by default on dark bg */
+.font-pixel { color: #e2e8f0; }

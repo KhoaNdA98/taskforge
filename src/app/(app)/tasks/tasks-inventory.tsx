@@ -111,9 +111,9 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
         </span>
         <span style={{
           fontFamily: "'VT323', monospace",
-          fontSize: '15px',
+          fontSize: '19px',
           color: statusColor,
-          textShadow: `0 0 6px ${statusColor}80`,
+          textShadow: `0 0 8px ${statusColor}`,
           letterSpacing: '0.08em',
         }}>
           {STATUS_LABEL[task.status]}
@@ -121,7 +121,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       </div>
 
       {/* Task name */}
-      <h3 style={{ fontFamily: "'VT323', monospace", fontSize: '24px', color: '#e2e8f0', margin: 0, wordWrap: 'break-word', overflowWrap: 'break-word', lineHeight: 1.3, letterSpacing: '0.03em' }}>
+      <h3 style={{ fontFamily: "'VT323', monospace", fontSize: '26px', color: '#ffffff', textShadow: '0 0 1px rgba(255,255,255,0.4)', margin: 0, wordWrap: 'break-word', overflowWrap: 'break-word', lineHeight: 1.3, letterSpacing: '0.03em' }}>
         {task.name}
       </h3>
 
@@ -131,19 +131,19 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       {/* Meta: client + reward */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: '#9ca3af', letterSpacing: '0.06em' }}>
             CLIENT
           </div>
-          <div style={{ fontFamily: "'VT323', monospace", fontSize: '20px', color: '#a855f7' }}>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: '22px', color: '#c084fc', textShadow: '0 0 6px rgba(168,85,247,0.5)' }}>
             {clientName ?? '—'}
           </div>
         </div>
         {isOD && (
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontFamily: "'VT323', monospace", fontSize: '13px', color: '#6b7280', letterSpacing: '0.06em' }}>
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: '16px', color: '#9ca3af', letterSpacing: '0.06em' }}>
               REWARD
             </div>
-            <div style={{ fontFamily: "'VT323', monospace", fontSize: '26px', color: '#06b6d4', textShadow: '0 0 8px rgba(6,182,212,0.4)' }}>
+            <div style={{ fontFamily: "'VT323', monospace", fontSize: '28px', color: '#22d3ee', textShadow: '0 0 10px rgba(6,182,212,0.6)' }}>
               +{formatMoney(task.amount, currency)} XP
             </div>
           </div>
@@ -151,7 +151,7 @@ function QuestCard({ task, clients, currency, onEdit, onDelete }: {
       </div>
 
       {/* Date */}
-      <div style={{ fontFamily: "'VT323', monospace", fontSize: '15px', color: '#4b5563', letterSpacing: '0.04em' }}>
+      <div style={{ fontFamily: "'VT323', monospace", fontSize: '17px', color: '#6b7280', letterSpacing: '0.04em' }}>
         DATE: {formatDate(task.task_date).slice(0, 10)}
       </div>
     </article>
@@ -222,7 +222,7 @@ export function TasksInventory({ tasks, clients, currency }: {
           {'// NO ACTIVE QUESTS'}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
           {tasks.map(task => (
             <QuestCard
               key={task.id} task={task} clients={clients} currency={currency}

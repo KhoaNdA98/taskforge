@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           totalRevenue={totalRevenue}
           currency={currency}
         />
-        <main style={{ flex: 1, width: '100%', maxWidth: '1280px', margin: '0 auto', padding: '24px 24px 140px' }}>
+        <main style={{ flex: 1, width: '100%', padding: '24px 16px 140px' }}>
           {children}
         </main>
         <BottomHotbar />
