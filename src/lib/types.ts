@@ -1,5 +1,5 @@
-export type TaskType = "maintain" | "on_demand";
-export type TaskStatus = "todo" | "doing" | "done";
+export type TaskType   = "maintain" | "on_demand";
+export type TaskStatus = "todo" | "doing" | "review" | "done";
 
 export interface Settings {
   user_id: string;
@@ -45,7 +45,8 @@ export const TASK_TYPE_LABEL: Record<TaskType, string> = {
 };
 
 export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
-  todo: "To do",
-  doing: "In progress",
-  done: "Done",
+  todo:   "To do",
+  doing:  "In progress",
+  review: "In review",
+  done:   "Done",
 };

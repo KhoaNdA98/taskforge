@@ -10,7 +10,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create type public.task_status as enum ('todo', 'doing', 'done');
+  create type public.task_status as enum ('todo', 'doing', 'review', 'done');
 exception when duplicate_object then null; end $$;
 
 -- Settings: one row per user (global hourly rate + currency) ----------------

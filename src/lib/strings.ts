@@ -43,9 +43,10 @@ export const TASK = {
   },
 
   status: {
-    todo: "To do",
-    doing: "In progress",
-    done: "Done",
+    todo:   "To do",
+    doing:  "In progress",
+    review: "In review",
+    done:   "Done",
   },
 
   empty: {

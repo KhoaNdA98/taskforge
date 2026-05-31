@@ -2,31 +2,43 @@ import { LoginForm } from './login-form';
 
 export default function LoginPage() {
   return (
-    <div className="min-h-dvh bg-px-bg flex items-center justify-center p-6">
-      <div className="w-full max-w-sm">
+    <div style={{ minHeight: '100dvh', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      <div style={{ width: '100%', maxWidth: '360px' }}>
+
         {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2.5 mb-1.5">
-            <div style={{ width:10,height:10,flexShrink:0,background:'#7c3aed',
-              boxShadow:'0 0 10px #7c3aed,3px 0 0 #a855f7,0 3px 0 #a855f7' }} />
-            <span className="font-pixel text-[38px] text-px-purple tracking-[0.14em]"
-                  style={{ textShadow:'0 0 16px rgba(168,85,247,0.5)' }}>
-              TASKFORGE
+        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '4px' }}>
+            <div style={{ width: 12, height: 12, flexShrink: 0, background: '#ff914d', boxShadow: '2px 0 0 #ffde59, 0 2px 0 #ffde59, 2px 2px 0 #cc6b30' }} />
+            <span style={{
+              fontFamily: "'VT323', monospace", fontSize: '42px', letterSpacing: '0.1em',
+              color: '#111111',
+              textShadow: '-1px -1px 0 #ff914d, 1px -1px 0 #ff914d, -1px 1px 0 #ff914d, 1px 1px 0 #ff914d, 2px 3px 0 #cc6b30, 3px 4px 0 #111111',
+            }}>
+              ⭐ TASKFORGE
             </span>
           </div>
-          <div className="font-pixel text-[15px] text-px-purple/35 tracking-[0.1em]">
-            {'// RPG EDITION v1.0'}
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.14em', color: 'rgba(252,234,187,0.3)', textTransform: 'uppercase' }}>
+            Golden Arcade Edition
           </div>
         </div>
 
         {/* Panel */}
-        <div className="bg-px-card border-2 border-px-border shadow-hard-lg p-7">
-          <div className="font-pixel text-[12px] text-px-purple/45 tracking-[0.12em] mb-1">{'// ENTER WORLD'}</div>
-          <div className="font-pixel text-[24px] text-[#e8e8f0] tracking-[0.08em] mb-5">SIGN IN</div>
+        <div style={{
+          background: '#232323',
+          border: '3px solid #111111',
+          boxShadow: 'inset 0 0 0 1px rgba(255,145,77,0.2), 5px 5px 0 #111111',
+          padding: '28px',
+        }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '10px', fontWeight: 600, letterSpacing: '0.14em', color: 'rgba(255,145,77,0.5)', textTransform: 'uppercase', marginBottom: '4px' }}>
+            Enter World
+          </div>
+          <div style={{ fontFamily: "'VT323', monospace", fontSize: '28px', color: '#fceabb', letterSpacing: '0.06em', marginBottom: '20px' }}>
+            SIGN IN
+          </div>
           <LoginForm />
         </div>
 
-        <div className="text-center mt-4 font-pixel text-[13px] text-white/15 tracking-[0.04em]">
+        <div style={{ textAlign: 'center', marginTop: '16px', fontFamily: "'Inter', sans-serif", fontSize: '11px', color: 'rgba(252,234,187,0.15)', letterSpacing: '0.06em' }}>
           task &amp; billing tracker for freelancers
         </div>
       </div>

@@ -29,7 +29,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div
         id="app-shell"
         className="crt-screen"
-        style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}
+        style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#1a1a1a' }}
       >
         <PlayerStatsBar
           email={user.email ?? ''}

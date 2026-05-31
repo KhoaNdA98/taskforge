@@ -83,6 +83,7 @@ export function TasksForm({ task, clients, onDone }: {
           <select id="tf-status" name="status" defaultValue={task?.status ?? 'todo'} className="px-input">
             <option value="todo">{TASK.status.todo}</option>
             <option value="doing">{TASK.status.doing}</option>
+            <option value="review">{TASK.status.review}</option>
             <option value="done">{TASK.status.done}</option>
           </select>
         </div>
